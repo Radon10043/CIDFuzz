@@ -247,6 +247,8 @@ struct queue_entry {
   u8* trace_mini;                     /* Trace bytes, if kept             */
   u32 tc_ref;                         /* Trace bytes ref count            */
 
+  double fitness;                     /* Radon: Fitness of seed           */
+
   struct queue_entry *next,           /* Next element, if any             */
                      *next_100;       /* 100 elements ahead               */
 
@@ -271,6 +273,14 @@ static u32 extras_cnt;                /* Total number of tokens read      */
 
 static struct extra_data* a_extras;   /* Automatically selected extras    */
 static u32 a_extras_cnt;              /* Total number of tokens available */
+
+static double cur_fitness = -1.0;        /* Radon: Current seed's fitness    */
+static double max_fitness = -1.0;        /* Radon: Max fitness of queue      */
+static double min_fitness = 100.0;       /* Radon: Min fitness of queue      */
+                                      /* Fitness range: 0 - 1             */
+
+static u32 stop_time   = 2880;        /* Radon: Fuzzing time (minutes)    */
+                                      /* Default: 2 days                  */
 
 static u8* (*post_handler)(u8* buf, u32* len);
 
@@ -320,6 +330,22 @@ enum {
   /* 04 */ FAULT_NOINST,
   /* 05 */ FAULT_NOBITS
 };
+
+
+/* Radon: calculate fitness of current input */
+static void calculate_fitness(void) {
+
+  /* Calculate fitness of current input */
+
+  u64* total_fitness = (u64*) (trace_bits + MAP_SIZE);
+  u64* total_count = (u64*) (trace_bits + MAP_SIZE + 8);
+
+  if (*total_count > 0)
+    cur_fitness = (double) (*total_fitness) / (double) (100) / (double) (*total_count);
+  else
+    cur_fitness = 0.0;
+
+}
 
 
 /* Get unix time in milliseconds */
@@ -782,6 +808,20 @@ static void add_to_queue(u8* fname, u32 len, u8 passed_det) {
   q->depth        = cur_depth + 1;
   q->passed_det   = passed_det;
 
+  /* Radon: update fitness */
+
+  q->fitness = cur_fitness;
+
+  /* Radon: update max and min fitness */
+
+  if (cur_fitness > max_fitness)
+    max_fitness = cur_fitness;
+
+  if (cur_fitness > 0 && cur_fitness < min_fitness)
+    min_fitness = cur_fitness;
+
+  /* AFL 2.52b */
+
   if (q->depth > max_depth) max_depth = q->depth;
 
   if (queue_top) {
@@ -883,6 +923,10 @@ static inline u8 has_new_bits(u8* virgin_map) {
   u64* virgin  = (u64*)virgin_map;
 
   u32  i = (MAP_SIZE >> 3);
+
+  /* Calculate fitness of current input */
+
+  calculate_fitness();
 
 #else
 
@@ -2588,6 +2632,23 @@ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
     }
 
     cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
+
+    /* Radon: calculate fitness? */
+    calculate_fitness();
+
+    /* Radon: update fitness */
+
+    q->fitness = cur_fitness;
+
+    /* Radon: update max and min fitness */
+
+    if (cur_fitness > max_fitness)
+      max_fitness = cur_fitness;
+
+    if (cur_fitness > 0 && cur_fitness < min_fitness)
+      min_fitness = cur_fitness;
+
+    /* AFL-2.52b */
 
     if (q->exec_cksum != cksum) {
 
@@ -4739,6 +4800,16 @@ static u32 calculate_score(struct queue_entry* q) {
     default:        perf_score *= 5;
 
   }
+
+  /* MYFUZZ-AFL2.52B-Debugging */
+
+  u64 t = (get_cur_time() - start_time) / 1000;
+  fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, max_fitness: %4lf min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, max_fitness, min_fitness, perf_score);
+
+  /* Radon: MYFUZZ-Strategy */
+
+  double k = 0.5;
+  perf_score = k * perf_score + (1.0 - k) * q->fitness * perf_score;;
 
   /* Make sure that we don't go over limit. */
 
@@ -7725,7 +7796,7 @@ int main(int argc, char** argv) {
   gettimeofday(&tv, &tz);
   srandom(tv.tv_sec ^ tv.tv_usec ^ getpid());
 
-  while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:dnCB:S:M:x:Q")) > 0)
+  while ((opt = getopt(argc, argv, "+i:o:f:m:t:T:dnCB:S:M:x:Qk:")) > 0)
 
     switch (opt) {
 
@@ -7890,6 +7961,13 @@ int main(int argc, char** argv) {
         qemu_mode = 1;
 
         if (!mem_limit_given) mem_limit = MEM_LIMIT_QEMU;
+
+        break;
+
+      case 'k': /* Fuzzing time (minutes). Default: 2880 minutes (2 days) */
+
+        if (sscanf(optarg, "%u", &stop_time) < 1)
+          FATAL("Bad syntax used for -k");
 
         break;
 
