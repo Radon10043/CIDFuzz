@@ -323,7 +323,7 @@ int main(int argc, char** argv) {
 #ifdef USE_TRACE_PC
     SAYF(cCYA "afl-clang-fast [tpcg] " cBRI VERSION  cRST " by <lszekeres@google.com>\n");
 #else
-    SAYF(cCYA "afl-clang-fast " cBRI VERSION  cRST " by <lszekeres@google.com>\n");
+    SAYF(cCYA "afl-clang-fast " cBRI VERSION  cRST " modified by Radon\n");
 #endif /* ^USE_TRACE_PC */
 
   }
