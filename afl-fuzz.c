@@ -928,6 +928,9 @@ static inline u8 has_new_bits(u8* virgin_map) {
 
   calculate_fitness();
 
+  if (get_cur_time() - start_time > stop_time * 60000)
+    stop_soon = 2;
+
 #else
 
   u32* current = (u32*)trace_bits;
@@ -3324,8 +3327,8 @@ keep_as_crash:
 
 #ifndef SIMPLE_FILES
 
-      fn = alloc_printf("%s/crashes/id:%06llu,sig:%02u,%s", out_dir,
-                        unique_crashes, kill_signal, describe_op(0));
+      fn = alloc_printf("%s/crashes/id:%06llu,%llu,sig:%02u,%s", out_dir,
+                        unique_crashes, get_cur_time() - start_time, kill_signal, describe_op(0));
 
 #else
 
@@ -4057,7 +4060,7 @@ static void show_stats(void) {
 
   sprintf(tmp + banner_pad, "%s " cLCY VERSION cLGN
           " (%s)",  crash_mode ? cPIN "peruvian were-rabbit" : 
-          cYEL "american fuzzy lop", use_banner);
+          cYEL "american fuzzy lop (myfuzz)", use_banner);
 
   SAYF("\n%s\n\n", tmp);
 
