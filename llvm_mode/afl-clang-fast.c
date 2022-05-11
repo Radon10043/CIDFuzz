@@ -139,6 +139,11 @@ static void edit_params(u32 argc, char** argv) {
   while (--argc) {
     u8* cur = *(++argv);
 
+    /* Radon: my args */
+
+    if (!strncmp(cur, "-fitness", 8) || !strncmp(cur, "-outdir", 7))
+      cc_params[cc_par_cnt++] = "-mllvm";
+
     if (!strcmp(cur, "-m32")) bit_mode = 32;
     if (!strcmp(cur, "-m64")) bit_mode = 64;
 
@@ -208,7 +213,7 @@ static void edit_params(u32 argc, char** argv) {
   if (!getenv("AFL_DONT_OPTIMIZE")) {
 
     cc_params[cc_par_cnt++] = "-g";
-    cc_params[cc_par_cnt++] = "-O3";
+    // cc_params[cc_par_cnt++] = "-O3";   // Disable -O3, or we will lose variable name
     cc_params[cc_par_cnt++] = "-funroll-loops";
 
   }
