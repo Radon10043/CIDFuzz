@@ -4804,15 +4804,15 @@ static u32 calculate_score(struct queue_entry* q) {
 
   }
 
-  /* MYFUZZ-AFL2.52B-Debugging */
-
-  u64 t = (get_cur_time() - start_time) / 1000;
-  fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, max_fitness: %4lf min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, max_fitness, min_fitness, perf_score);
-
   /* Radon: MYFUZZ-Strategy */
 
   double k = 0.5;
   perf_score = k * perf_score + (1.0 - k) * q->fitness * perf_score;;
+
+  /* MYFUZZ-AFL2.52B-Debugging */
+
+  u64 t = (get_cur_time() - start_time) / 1000;
+  fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, max_fitness: %4lf min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, max_fitness, min_fitness, perf_score);
 
   /* Make sure that we don't go over limit. */
 
