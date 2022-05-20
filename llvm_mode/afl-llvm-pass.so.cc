@@ -491,19 +491,6 @@ bool AFLCoverage::runOnModule(Module &M) {
               break;
             }
 
-            case Instruction::BitCast: { // TODO: 数组的初始化看起来和BitCast有关, 这么判断数组的def可以吗?
-
-              for (auto op = I.op_begin(); op != I.op_end(); op++)
-                fsearchVar(op, varName);
-
-              if (varName.empty())
-                break;
-
-              duVarMap[dbgLocMap[&I]]["def"].insert(varName);
-
-              break;
-            }
-
             case Instruction::Load: { // load表示从内存中读取, 所以是use
 
               for (auto op = I.op_begin(); op != I.op_end(); op++)
