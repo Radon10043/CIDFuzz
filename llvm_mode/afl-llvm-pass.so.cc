@@ -264,7 +264,7 @@ static void fsearchCall(Instruction::op_iterator op, std::string &varName, std::
 
     size_t found = varName.find(".addr");
     if (found != std::string::npos)
-      varName = varName.substr(found + 1);
+      varName = varName.substr(0, found);
 
     vars.insert(varName);
   }
@@ -482,6 +482,8 @@ bool AFLCoverage::runOnModule(Module &M) {
                   continue;
                 duVarMap[dbgLocMap[&I]]["use"].insert(varNames[i]);
               }
+
+              if (n < 2) outs() << "Hm???????????\n";
 
               if (varNames[n - 1].empty())
                 break;
