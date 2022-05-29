@@ -809,7 +809,7 @@ bool AFLCoverage::runOnModule(Module &M) {
 
           for (auto&& psi : fitMap) {
 
-            if (bbname.compare(psi.first) == 0)   // or fitness = fitMap[bbname]?
+            if (bbname.compare(psi.first) == 0)
               fitness = psi.second;
 
           }
