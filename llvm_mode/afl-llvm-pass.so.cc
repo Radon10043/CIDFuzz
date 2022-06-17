@@ -922,16 +922,16 @@ bool AFLCoverage::runOnModule(Module &M) {
 
         int idx = find(changes.begin(), changes.end(), bbname) - changes.begin();
 
-        if (idx < changes.size()) {
+        if (idx < changes.size() && idx < 32) {
 
           ConstantInt *MapCovLoc = ConstantInt::get(LargestType, MAP_SIZE + 16 + idx);
 
-            Value *MapMarkPtr = IRB.CreateBitCast(
+          Value *MapMarkPtr = IRB.CreateBitCast(
             IRB.CreateGEP(MapPtr,MapCovLoc), Int8Ty->getPointerTo());
           IRB.CreateStore(ConstantInt::get(Int8Ty, 65), MapMarkPtr)
-                ->setMetadata(M.getMDKindID("nonsanitize"), MDNode::get(C, None));
+              ->setMetadata(M.getMDKindID("nonsanitize"), MDNode::get(C, None));
 
-          }
+        }
 #endif
 
         inst_blocks++;
