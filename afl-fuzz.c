@@ -274,13 +274,17 @@ static u32 extras_cnt;                /* Total number of tokens read      */
 static struct extra_data* a_extras;   /* Automatically selected extras    */
 static u32 a_extras_cnt;              /* Total number of tokens available */
 
-static double cur_fitness = -1.0;        /* Radon: Current seed's fitness    */
-static double max_fitness = -1.0;        /* Radon: Max fitness of queue      */
-static double min_fitness = 100.0;       /* Radon: Min fitness of queue      */
+static double cur_fitness = -1.0;     /* Radon: Current seed's fitness    */
+static double max_fitness = -1.0;     /* Radon: Max fitness of queue      */
+static double min_fitness = 100.0;    /* Radon: Min fitness of queue      */
                                       /* Fitness range: 0 - 1             */
 
 static u32 stop_time   = 2880;        /* Radon: Fuzzing time (minutes)    */
                                       /* Default: 2 days                  */
+
+#ifdef CHECK_COV
+static u8 changes_cov[32] = {0};     /* Radon: Record change BBs coverage */
+#endif
 
 static u8* (*post_handler)(u8* buf, u32* len);
 
@@ -927,6 +931,13 @@ static inline u8 has_new_bits(u8* virgin_map) {
   /* Calculate fitness of current input */
 
   calculate_fitness();
+
+#ifdef CHECK_COV
+  for (s32 i = 0; i < 32; i++) {
+    u8* is_cov = (u8*) (trace_bits + MAP_SIZE + 16 + i);
+    changes_cov[i] = *is_cov;
+  }
+#endif
 
   if (get_cur_time() - start_time > stop_time * 60000)
     stop_soon = 2;
@@ -4812,7 +4823,19 @@ static u32 calculate_score(struct queue_entry* q) {
   /* MYFUZZ-AFL2.52B-Debugging */
 
   u64 t = (get_cur_time() - start_time) / 1000;
-  fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, max_fitness: %4lf min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, max_fitness, min_fitness, perf_score);
+
+#ifdef CHECK_COV
+
+  u32 change_cov_num = 0;
+  for (s32 i = 0; i < 32; i++)
+    if (changes_cov[i]) change_cov_num++;
+  fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, change_cov_num: %u, max_fitness: %4lf, min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, change_cov_num, max_fitness, min_fitness, perf_score);
+
+#else
+
+  fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, max_fitness: %4lf, min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, max_fitness, min_fitness, perf_score);
+
+#endif
 
   /* Make sure that we don't go over limit. */
 
