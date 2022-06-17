@@ -92,6 +92,11 @@ cl::opt<std::string> OutDirectory(
     cl::desc("Output directory where json files are generated."),
     cl::value_desc("outdir"));
 
+cl::opt<std::string> ChangesFile(
+    "changes",
+    cl::desc("A file which store change bb's name."),
+    cl::value_desc("changes"));
+
 namespace llvm {
 
 template<>
@@ -324,6 +329,35 @@ bool AFLCoverage::runOnModule(Module &M) {
     }
 
   }
+
+#ifdef CHECK_COV
+  /* Get change bbs */
+
+  std::vector<std::string> changes;   // 存储所有变更基本块的vector
+
+  if (!ChangesFile.empty()) {
+
+    std::string changeBB;
+    std::ifstream fin(ChangesFile);
+
+    if (fin.is_open()) {
+
+      while (getline(fin, changeBB)) {
+
+        if (!changeBB.empty())
+          changes.emplace_back(changeBB);
+
+      }
+
+    } else {
+
+      FATAL("Hmmm, I can't find changes file.");
+      return false;
+
+    }
+
+  }
+#endif
 
   /* Show a banner */
 
@@ -881,18 +915,24 @@ bool AFLCoverage::runOnModule(Module &M) {
           IRB.CreateStore(IncrCnt, MapCntPtr)
               ->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 
-          /* TEMP: 若覆盖了目标点, shm[MAP_SIZE + 16]设置为1, 需扩展24字节 */
-#if 0
-          std::unordered_set<std::string> taintbbs = {"jasper.c:317"};
-          if (taintbbs.count(bb_name_copy)) {
+        }
+
+#ifdef CHECK_COV
+        /* TEMP: 根据覆盖的changeBB的不同对shm进行修改, 目前最多查看32个changeBB的覆盖情况 */
+
+        int idx = find(changes.begin(), changes.end(), bbname) - changes.begin();
+
+        if (idx < changes.size()) {
+
+          ConstantInt *MapCovLoc = ConstantInt::get(LargestType, MAP_SIZE + 16 + idx);
+
             Value *MapMarkPtr = IRB.CreateBitCast(
-              IRB.CreateGEP(MapPtr,MapMarkLoc), LargestType->getPointerTo());
-            IRB.CreateStore(One, MapMarkPtr)
+            IRB.CreateGEP(MapPtr,MapCovLoc), Int8Ty->getPointerTo());
+          IRB.CreateStore(ConstantInt::get(Int8Ty, 65), MapMarkPtr)
                 ->setMetadata(M.getMDKindID("nonsanitize"), MDNode::get(C, None));
+
           }
 #endif
-
-        }
 
         inst_blocks++;
 

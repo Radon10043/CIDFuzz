@@ -49,7 +49,7 @@
    is used for instrumentation output before __afl_map_shm() has a chance to run.
    It will end up as .comm, so it shouldn't be too wasteful. */
 
-u8  __afl_area_initial[MAP_SIZE + 16];
+u8  __afl_area_initial[MAP_SIZE + 48];
 u8* __afl_area_ptr = __afl_area_initial;
 
 __thread u32 __afl_prev_loc;
@@ -187,7 +187,7 @@ int __afl_persistent_loop(unsigned int max_cnt) {
 
     if (is_persistent) {
 
-      memset(__afl_area_ptr, 0, MAP_SIZE + 16);
+      memset(__afl_area_ptr, 0, MAP_SIZE + 48);
       __afl_area_ptr[0] = 1;
       __afl_prev_loc = 0;
     }
