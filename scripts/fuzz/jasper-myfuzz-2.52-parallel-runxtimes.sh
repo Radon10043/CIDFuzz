@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2022-06-10 14:19:33
-# @LastEditors: Radon
-# @LastEditTime: 2022-06-13 18:13:38
+ # @LastEditors: Radon
+ # @LastEditTime: 2022-06-17 14:52:53
 # @Description: jasper-CVE-2021-3443_26927, myfuzz parallel mode
 ###
 
@@ -75,7 +75,7 @@ main() {
     # Run [x] times
     for ((i = 1; i <= $1; i++)); do
         gnome-terminal -t "secondaey" -- bash -c "$MYFUZZ/afl-fuzz -S secondary -k 120 -i in -o out$i src/appl/jasper --output /tmp/out_s.jpg --input @@"
-        $MYFUZZ/afl-fuzz -M main -k 120 -i in -o out$i src/appl/jasper --output /tmp/out_m.jpg --input @@
+        $MYFUZZ/afl-fuzz -M main -m none -k 120 -i in -o out$i src/appl/jasper --output /tmp/out_m.jpg --input @@
     done
 }
 
