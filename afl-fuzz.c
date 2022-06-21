@@ -4831,10 +4831,9 @@ static u32 calculate_score(struct queue_entry* q) {
 
   /* MYFUZZ-AFL2.52B-Debugging */
 
-  u64 t = (get_cur_time() - start_time) / 1000;
-
 #ifdef CHECK_COV
 
+  u64 t = (get_cur_time() - start_time) / 1000;
   u32 change_cov_num = 0;
   for (s32 i = 0; i < 32; i++)
     if (changes_cov[i]) change_cov_num++;
@@ -4842,6 +4841,7 @@ static u32 calculate_score(struct queue_entry* q) {
 
 #elif DEBUG
 
+  u64 t = (get_cur_time() - start_time) / 1000;
   fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, max_fitness: %4lf, min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, max_fitness, min_fitness, perf_score);
 
 #endif
