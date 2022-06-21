@@ -823,7 +823,7 @@ bool AFLCoverage::runOnModule(Module &M) {
     for (auto &F : M)
       for (auto &BB : F) {
 
-        u64 mydist = -1;
+        s64 mydist = -1;
         std::string bbname;
 
         for (auto &I : BB) {
