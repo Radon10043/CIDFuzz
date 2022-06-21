@@ -81,9 +81,9 @@ std::map<std::string, std::string> bbFuncMap;                                   
 std::map<std::string, std::string> linebbMap;                                                                // <行, 其所在bb>
 std::map<std::string, int> maxLineMap;                                                                       // <filename, 文件行数>
 
-cl::opt<std::string> FitnessFile(
-    "fitness",
-    cl::desc("Fitness file containing the fitness of each basic block to the provided targets."),
+cl::opt<std::string> MyDistFile(
+    "mydist",
+    cl::desc("MyDist file containing the mydist of each basic block to the provided targets."),
     cl::value_desc("filename")
 );
 
@@ -279,13 +279,13 @@ static void fsearchCall(Instruction::op_iterator op, std::string &varName, std::
 bool AFLCoverage::runOnModule(Module &M) {
 
   bool is_preprocessing = false;
-  std::unordered_map<std::string, int> fitMap;
+  std::unordered_map<std::string, u64> distMap;
   std::unordered_set<std::string> bbset;
 
-  /* 不能同时指定 -fitness 与 -outdir */
+  /* 不能同时指定 -mydist 与 -outdir */
 
-  if (!FitnessFile.empty() && !OutDirectory.empty()) {
-    FATAL("Cannot specify both '-fitness' and '-outdir'!");
+  if (!MyDistFile.empty() && !OutDirectory.empty()) {
+    FATAL("Cannot specify both '-mydist' and '-outdir'!");
     return false;
   }
 
@@ -295,26 +295,26 @@ bool AFLCoverage::runOnModule(Module &M) {
 
     is_preprocessing = true;
 
-  } else if (!FitnessFile.empty()) {
+  } else if (!MyDistFile.empty()) {
 
-    std::ifstream fin(FitnessFile);
-    std::string bbAndFit;
+    std::ifstream fin(MyDistFile);
+    std::string bbAndDist;
 
     if (fin.is_open()) {
 
-      while (getline(fin, bbAndFit)) {
+      while (getline(fin, bbAndDist)) {
 
         /* 查询一行中逗号所在位置, 若没有, 跳过 */
 
-        size_t pos = bbAndFit.find(",");
+        size_t pos = bbAndDist.find(",");
         if (pos == std::string::npos)
           continue;
 
         /* 获取bbname与适应度*100后的值, 存入map与set */
 
-        std::string bbname = bbAndFit.substr(0, pos);
-        int fitness        = (int) (100 * atof(bbAndFit.substr(pos + 1).c_str()));    // or 1000?
-        fitMap[bbname]     = fitness;
+        std::string bbname = bbAndDist.substr(0, pos);
+        int mydist         = (int) (atof(bbAndDist.substr(pos + 1).c_str()));
+        distMap[bbname]    = mydist;
         bbset.insert(bbname);
 
       }
@@ -323,7 +323,7 @@ bool AFLCoverage::runOnModule(Module &M) {
 
     } else {
 
-      FATAL("Hmmm, I can't find fitness file.");
+      FATAL("Hmmm, I can't find mydist file.");
       return false;
 
     }
@@ -366,7 +366,7 @@ bool AFLCoverage::runOnModule(Module &M) {
   if (isatty(2) && !getenv("AFL_QUIET")) {
 
     SAYF(cCYA "afl-llvm-pass " cBRI VERSION cRST " modified by Radon (%s mode)\n",
-        (is_preprocessing ? "preprocessing" : "fitness instrumentation"));
+        (is_preprocessing ? "preprocessing" : "mydist instrumentation"));
 
   } else be_quiet = 1;
 
@@ -789,7 +789,7 @@ bool AFLCoverage::runOnModule(Module &M) {
 
   } else {
 
-    /* Fitness instrumentation mode */
+    /* MyDist instrumentation mode */
 
     LLVMContext &C = M.getContext();
 
@@ -800,10 +800,12 @@ bool AFLCoverage::runOnModule(Module &M) {
     /* x86_64 */
 
     IntegerType *LargestType = Int64Ty;
+#if 0
     ConstantInt *MapCntLoc = ConstantInt::get(LargestType, MAP_SIZE + 8);
-
-    ConstantInt *MapFitLoc = ConstantInt::get(LargestType, MAP_SIZE);
     ConstantInt *One = ConstantInt::get(LargestType, 1);
+#endif
+
+    ConstantInt *MapDistLoc = ConstantInt::get(LargestType, MAP_SIZE);
 
     /* Get globals for the SHM region and the previous location. Note that
       __afl_prev_loc is thread-local. */
@@ -821,7 +823,7 @@ bool AFLCoverage::runOnModule(Module &M) {
     for (auto &F : M)
       for (auto &BB : F) {
 
-        int fitness = -1;
+        u64 mydist = -1;
         std::string bbname;
 
         for (auto &I : BB) {
@@ -841,10 +843,10 @@ bool AFLCoverage::runOnModule(Module &M) {
 
         if (!bbname.empty() && bbset.count(bbname)) {
 
-          for (auto&& psi : fitMap) {
+          for (auto&& psi : distMap) {
 
             if (bbname.compare(psi.first) == 0)
-              fitness = psi.second;
+              mydist = psi.second;
 
           }
 
@@ -888,22 +890,23 @@ bool AFLCoverage::runOnModule(Module &M) {
             IRB.CreateStore(ConstantInt::get(Int32Ty, cur_loc >> 1), AFLPrevLoc);
         Store->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 
-        if (fitness >= 0) {
+        if (mydist >= 0) {
 
-          ConstantInt *Fitness =
-              ConstantInt::get(LargestType, (unsigned) fitness);
+          ConstantInt *MyDist =
+              ConstantInt::get(LargestType, (u64) (1 << mydist));
 
-          /* Add fitness to shm[MAPSIZE] */
+          /* Add mydist to shm[MAPSIZE] */
 
-          Value *MapFitPtr = IRB.CreateBitCast(
-              IRB.CreateGEP(MapPtr, MapFitLoc), LargestType->getPointerTo());
-          LoadInst *MapFit = IRB.CreateLoad(MapFitPtr);
-          MapFit->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
+          Value *MapDistPtr = IRB.CreateBitCast(
+              IRB.CreateGEP(MapPtr, MapDistLoc), LargestType->getPointerTo());
+          LoadInst *MapDist = IRB.CreateLoad(MapDistPtr);
+          MapDist->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 
-          Value *IncrFit = IRB.CreateAdd(MapFit, Fitness);
-          IRB.CreateStore(IncrFit, MapFitPtr)
+          Value *IncrDist = IRB.CreateOr(MapDist, MyDist);
+          IRB.CreateStore(IncrDist, MapDistPtr)
               ->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 
+#if 0
           /* Increase count at shm[MAPSIZE + 8] */
 
           Value *MapCntPtr = IRB.CreateBitCast(
@@ -914,6 +917,7 @@ bool AFLCoverage::runOnModule(Module &M) {
           Value *IncrCnt = IRB.CreateAdd(MapCnt, One);
           IRB.CreateStore(IncrCnt, MapCntPtr)
               ->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
+#endif
 
         }
 

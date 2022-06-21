@@ -274,6 +274,7 @@ static u32 extras_cnt;                /* Total number of tokens read      */
 static struct extra_data* a_extras;   /* Automatically selected extras    */
 static u32 a_extras_cnt;              /* Total number of tokens available */
 
+static u32 max_conc_dist  = 64;       /* Radon: Max concern distance      */
 static double cur_fitness = -1.0;     /* Radon: Current seed's fitness    */
 static double max_fitness = -1.0;     /* Radon: Max fitness of queue      */
 static double min_fitness = 100.0;    /* Radon: Min fitness of queue      */
@@ -341,11 +342,19 @@ static void calculate_fitness(void) {
 
   /* Calculate fitness of current input */
 
-  u64* total_fitness = (u64*) (trace_bits + MAP_SIZE);
-  u64* total_count = (u64*) (trace_bits + MAP_SIZE + 8);
+  u64* total_dist = (u64*) (trace_bits + MAP_SIZE);
 
-  if (*total_count > 0)
-    cur_fitness = (double) (*total_fitness) / (double) (100) / (double) (*total_count);
+  u32 dist = -1;
+
+  for (u32 i = 0; i < max_conc_dist; i++) {
+    if (*total_dist & (u64) (1 << i)) {
+      dist = i;
+      break;
+    }
+  }
+
+  if (dist != -1)
+    cur_fitness = 1.0 / (double) (dist + 1.0);
   else
     cur_fitness = 0.0;
 

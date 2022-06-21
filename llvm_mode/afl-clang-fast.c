@@ -141,7 +141,7 @@ static void edit_params(u32 argc, char** argv) {
 
     /* Radon: my args */
 
-    if (!strncmp(cur, "-fitness", 8) || !strncmp(cur, "-outdir", 7) || !strncmp(cur, "-changes", 8))
+    if (!strncmp(cur, "-mydist", 7) || !strncmp(cur, "-outdir", 7) || !strncmp(cur, "-changes", 8))
       cc_params[cc_par_cnt++] = "-mllvm";
 
     if (!strcmp(cur, "-m32")) bit_mode = 32;
