@@ -4843,7 +4843,7 @@ static u32 calculate_score(struct queue_entry* q) {
     if (changes_cov[i]) change_cov_num++;
   fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, change_cov_num: %u, max_fitness: %4lf, min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, change_cov_num, max_fitness, min_fitness, perf_score);
 
-#elif DEBUG
+#elif defined DEBUG
 
   u64 t = (get_cur_time() - start_time) / 1000;
   fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, max_fitness: %4lf, min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, max_fitness, min_fitness, perf_score);
