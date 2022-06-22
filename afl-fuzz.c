@@ -344,13 +344,17 @@ static void calculate_fitness(void) {
 
   u64* total_dist = (u64*) (trace_bits + MAP_SIZE);
 
-  u32 dist = -1;
+  s32 dist = -1;
 
-  for (u32 i = 0; i < max_conc_dist; i++) {
-    if (*total_dist & (u64) (1 << i)) {
+  for (s32 i = 0; i < max_conc_dist; i++) {
+
+    /* C里的常数默认是int, 转换一下才能和u64比较... */
+
+    if ((*total_dist >> i) & 1) {
       dist = i;
       break;
     }
+
   }
 
   if (dist != -1)
