@@ -893,7 +893,7 @@ bool AFLCoverage::runOnModule(Module &M) {
         if (mydist >= 0) {
 
           ConstantInt *MyDist =
-              ConstantInt::get(LargestType, (u64) (1 << mydist));
+              ConstantInt::get(LargestType, ((u64)1 << mydist));
 
           /* Add mydist to shm[MAPSIZE] */
 
