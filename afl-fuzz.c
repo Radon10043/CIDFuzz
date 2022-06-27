@@ -284,7 +284,8 @@ static u32 stop_time   = 2880;        /* Radon: Fuzzing time (minutes)    */
                                       /* Default: 2 days                  */
 
 #ifdef CHECK_COV
-static u8 changes_cov[32] = {0};     /* Radon: Record change BBs coverage */
+static u8 total_chg_cov[32] = {0};    /* Radon: 记录每个变更的BB是否被覆盖 */
+static u32 chg_cov_tend[7200] = {0};  /* Radon: 7200秒内每妙覆盖的变更块数量 */
 #endif
 
 static u8* (*post_handler)(u8* buf, u32* len);
@@ -946,10 +947,24 @@ static inline u8 has_new_bits(u8* virgin_map) {
   calculate_fitness();
 
 #ifdef CHECK_COV
+  /* 查看当前覆盖里哪些块 */
   for (s32 i = 0; i < 32; i++) {
     u8* is_cov = (u8*) (trace_bits + MAP_SIZE + 16 + i);
-    changes_cov[i] = *is_cov;
+    if (*is_cov)
+      total_chg_cov[i] = 1;
   }
+
+  /* 获取当前总共覆盖了的变更块数量 */
+  u32 change_cov_num = 0;
+  for (s32 i = 0; i < 32; i++) {
+    if (total_chg_cov[i])
+      change_cov_num++;
+  }
+
+  /* 更新到时间-覆盖数量表中 */
+  u32 now = get_cur_time() - start_time;
+  if (now < 7200)
+    chg_cov_tend[now] = change_cov_num;
 #endif
 
   if (get_cur_time() - start_time > stop_time * 60000)
@@ -4835,15 +4850,7 @@ static u32 calculate_score(struct queue_entry* q) {
 
   /* MYFUZZ-AFL2.52B-Debugging */
 
-#ifdef CHECK_COV
-
-  u64 t = (get_cur_time() - start_time) / 1000;
-  u32 change_cov_num = 0;
-  for (s32 i = 0; i < 32; i++)
-    if (changes_cov[i]) change_cov_num++;
-  fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, change_cov_num: %u, max_fitness: %4lf, min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, change_cov_num, max_fitness, min_fitness, perf_score);
-
-#elif defined DEBUG
+#ifdef DEBUG
 
   u64 t = (get_cur_time() - start_time) / 1000;
   fprintf(stderr, "\n\n\n[Time %llu] q->fitness: %4lf, max_fitness: %4lf, min_fitness: %4lf, adjusted perf_score: %4d\n", t, q->fitness, max_fitness, min_fitness, perf_score);

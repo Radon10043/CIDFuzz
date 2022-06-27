@@ -932,7 +932,7 @@ bool AFLCoverage::runOnModule(Module &M) {
 
           Value *MapMarkPtr = IRB.CreateBitCast(
             IRB.CreateGEP(MapPtr,MapCovLoc), Int8Ty->getPointerTo());
-          IRB.CreateStore(ConstantInt::get(Int8Ty, 65), MapMarkPtr)
+          IRB.CreateStore(ConstantInt::get(Int8Ty, 1), MapMarkPtr)
               ->setMetadata(M.getMDKindID("nonsanitize"), MDNode::get(C, None));
 
         }
