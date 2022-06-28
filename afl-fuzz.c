@@ -8212,6 +8212,17 @@ stop_fuzzing:
   ck_free(target_path);
   ck_free(sync_id);
 
+#ifdef CHECK_COV
+  u8* fn = alloc_printf("%s/chg_cov_tend.txt", out_dir);
+  FILE* fp = fopen(fn, "w");
+
+  if (fp)
+    for (s32 i = 0; i < 7200; i++)
+      fprintf(fp, "%u\n", chg_cov_tend[i]);
+
+  fclose(fp);
+#endif
+
   alloc_report();
 
   OKF("We're done here. Have a nice day!\n");
