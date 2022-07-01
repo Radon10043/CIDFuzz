@@ -962,7 +962,7 @@ static inline u8 has_new_bits(u8* virgin_map) {
   }
 
   /* 更新到时间-覆盖数量表中 */
-  u32 now = get_cur_time() - start_time;
+  u32 now = (get_cur_time() - start_time) / 1000;
   if (now < 7200)
     chg_cov_tend[now] = change_cov_num;
 #endif
