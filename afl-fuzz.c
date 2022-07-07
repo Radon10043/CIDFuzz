@@ -284,8 +284,10 @@ static u32 stop_time   = 2880;        /* Radon: Fuzzing time (minutes)    */
                                       /* Default: 2 days                  */
 
 #ifdef CHECK_COV
-static u8 total_chg_cov[32] = {0};    /* Radon: 记录每个变更的BB是否被覆盖 */
-static u32 chg_cov_tend[7200] = {0};  /* Radon: 7200秒内每妙覆盖的变更块数量 */
+static u8 total_chg_cov[32]   = {0};  /* Radon: 记录每个变更的BB是否被覆盖    */
+static u32 chg_cov_tend[7200] = {0};  /* Radon: 7200秒内每妙覆盖的变更块数量  */
+static u8 has_dry_run         = 0;    /* Radon: 是否执行过perform_dry_run  */
+static u32 change_bb_cov      = 0;    /* Radon: 全局变量, 记录覆盖到的变更BB数量 */
 #endif
 
 static u8* (*post_handler)(u8* buf, u32* len);
@@ -959,6 +961,13 @@ static inline u8 has_new_bits(u8* virgin_map) {
   for (s32 i = 0; i < 32; i++) {
     if (total_chg_cov[i])
       change_cov_num++;
+  }
+
+  /* 如果与初始状态相比覆盖到了新变更块, 就停止测试 */
+  if (change_cov_num > change_bb_cov) {
+    change_bb_cov = change_cov_num;
+    if (has_dry_run)
+      stop_soon = 2;
   }
 
   /* 更新到时间-覆盖数量表中 */
@@ -2676,6 +2685,7 @@ static u8 calibrate_case(char** argv, struct queue_entry* q, u8* use_mem,
     cksum = hash32(trace_bits, MAP_SIZE, HASH_CONST);
 
     /* Radon: calculate fitness? */
+
     calculate_fitness();
 
     /* Radon: update fitness */
@@ -8106,6 +8116,10 @@ int main(int argc, char** argv) {
 
   perform_dry_run(use_argv);
 
+#ifdef CHECK_COV
+  has_dry_run = 1;
+#endif
+
   cull_queue();
 
   show_init_stats();
@@ -8216,9 +8230,16 @@ stop_fuzzing:
   u8* fn = alloc_printf("%s/chg_cov_tend.txt", out_dir);
   FILE* fp = fopen(fn, "w");
 
-  if (fp)
+  if (fp) {
+    fprintf(fp, "Stop time: %llu\n", get_cur_time() - start_time);
+
+    for (s32 i = 0; i < 32; i++)
+      fprintf(fp, "%u,", total_chg_cov[i]);
+    fprintf(fp, "\n");
+
     for (s32 i = 0; i < 7200; i++)
       fprintf(fp, "%u\n", chg_cov_tend[i]);
+  }
 
   fclose(fp);
 #endif
