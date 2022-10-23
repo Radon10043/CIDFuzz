@@ -34,6 +34,10 @@
 
 #define USE_COLOR
 
+/* Radon: Check coverage? */
+
+// #define CHECK_COV
+
 /* Comment out to disable fancy ANSI boxes and use poor man's 7-bit UI: */
 
 #define FANCY_BOXES
