@@ -2,7 +2,7 @@
 # @Author: Radon
 # @Date: 2022-06-17 12:17:21
  # @LastEditors: Radon
- # @LastEditTime: 2022-07-10 18:43:04
+ # @LastEditTime: 2022-10-30 22:16:06
 # @Description: Hi, say something
 ###
 
@@ -60,7 +60,7 @@ aflgo() {
     export ADDITIONAL="-targets=$TMP_DIR/BBtargets.txt -outdir=$TMP_DIR -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps"
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
-    # cat $TMP_DIR/commit.diff | /home/radon/Documents/showlinenum/showlinenum.awk show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/BBtargets.txt
+    # cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/BBtargets.txt
     echo $'jas_image.c:1600\njas_image.c:1644\njas_image.c:1658\njas_image.c:1667\njas_image.c:1697\njas_image.c:1714\nbmp_dec.c:243\nbmp_dec.c:244\nbmp_cod.c:130' >$TMP_DIR/BBtargets.txt
 
     echo $'jas_image.c:1600\njas_image.c:1644\njas_image.c:1658\njas_image.c:1667\njas_image.c:1697\njas_image.c:1714\nbmp_dec.c:243\nbmp_dec.c:244\nbmp_cod.c:130' >$TMP_DIR/changeBBs.txt
@@ -144,7 +144,7 @@ myfuzz() {
     echo $'jas_image.c:1600\njas_image.c:1644\njas_image.c:1658\njas_image.c:1667\njas_image.c:1697\njas_image.c:1714\nbmp_dec.c:243\nbmp_dec.c:244\nbmp_cod.c:130' >$TMP_DIR/changeBBs.txt
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
-    cat $TMP_DIR/commit.diff | /home/radon/Documents/showlinenum/showlinenum.awk show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
+    cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
 
     python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
     # cp -r /home/radon/Documents/fuzzing/jasper/fitness.cfg.txt $TMP_DIR
@@ -184,6 +184,7 @@ if ! [[ "$2" =~ ^[0-9]+$ ]]; then
     exit
 fi
 
+export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts/showlinenum.awk
 if [ "$1" == "afl" ]; then
     afl $2
 elif [ "$1" == "aflgo" ]; then

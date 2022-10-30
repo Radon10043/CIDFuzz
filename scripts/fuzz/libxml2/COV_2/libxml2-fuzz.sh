@@ -2,7 +2,7 @@
 # @Author: Radon
 # @Date: 2022-06-28 09:55:58
  # @LastEditors: Radon
- # @LastEditTime: 2022-07-11 09:19:57
+ # @LastEditTime: 2022-10-30 22:15:30
 # @Description: Hi, say something
 ###
 
@@ -63,7 +63,7 @@ aflgo() {
     export ADDITIONAL="-targets=$TMP_DIR/BBtargets.txt -outdir=$TMP_DIR -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps"
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
-    # cat $TMP_DIR/commit.diff | /home/radon/Documents/showlinenum/showlinenum.awk show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/BBtargets.txt
+    # cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/BBtargets.txt
     echo $'parser.c:7129\nparser.c:7130' >$TMP_DIR/BBtargets.txt
 
     echo $'parser.c:7129\nparser.c:7130' >$TMP_DIR/changeBBs.txt
@@ -142,7 +142,7 @@ myfuzz() {
     cd ..
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
-    cat $TMP_DIR/commit.diff | /home/radon/Documents/showlinenum/showlinenum.awk show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
+    cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
 
     # echo "" > $TMP_DIR/mydist.cfg.txt
     python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
@@ -179,6 +179,7 @@ fi
 
 echo "$2 is a number, yeah!"
 
+export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts/showlinenum.awk
 if [ "$1" == "afl" ]; then
     afl $2
 elif [ "$1" == "aflgo" ]; then

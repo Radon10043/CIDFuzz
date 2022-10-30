@@ -68,7 +68,7 @@ aflgo() {
     cd obj-aflgo
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
-    # cat $TMP_DIR/commit.diff | /home/radon/Documents/showlinenum/showlinenum.awk show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/BBtargets.txt
+    # cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/BBtargets.txt
     echo $'runzip.c:194\nrunzip.c:215\nrunzip.c:217\nrunzip.c:219\nrunzip.c:223\nrunzip.c:224\nrunzip.c:225\nrunzip.c:226\nrunzip.c:233\nrunzip.c:239\nrunzip.c:241' > $TMP_DIR/BBtargets.txt
 
     echo $'runzip.c:194\nrunzip.c:215\nrunzip.c:217\nrunzip.c:219\nrunzip.c:223\nrunzip.c:224\nrunzip.c:225\nrunzip.c:226\nrunzip.c:233\nrunzip.c:239\nrunzip.c:241' > $TMP_DIR/changeBBs.txt
@@ -146,7 +146,7 @@ myfuzz() {
     cd ..
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
-    cat $TMP_DIR/commit.diff | /home/radon/Documents/showlinenum/showlinenum.awk show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
+    cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
 
     python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
 
@@ -184,6 +184,7 @@ fi
 
 echo "$2 is a number, yeah!"
 
+export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts/showlinenum.awk
 if [ "$1" == "afl" ]; then
     afl $2
 elif [ "$1" == "aflgo" ]; then

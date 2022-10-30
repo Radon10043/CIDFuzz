@@ -2,7 +2,7 @@
 # @Author: Radon
 # @Date: 2022-06-17 12:17:21
  # @LastEditors: Radon
- # @LastEditTime: 2022-07-10 18:44:58
+ # @LastEditTime: 2022-10-30 22:16:01
 # @Description: Hi, say something
 ###
 
@@ -60,7 +60,7 @@ aflgo() {
     export ADDITIONAL="-targets=$TMP_DIR/BBtargets.txt -outdir=$TMP_DIR -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps"
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
-    # cat $TMP_DIR/commit.diff | /home/radon/Documents/showlinenum/showlinenum.awk show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/BBtargets.txt
+    # cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/BBtargets.txt
     echo $'jas_cm.c:1141\njas_cm.c:1146\njas_cm.c:1149\njas_cm.c:1152\njas_cm.c:1157\njas_cm.c:1160\njas_cm.c:1163\njas_cm.c:1166\njas_cm.c:313\njas_cm.c:314\njas_cm.c:317\njas_cm.c:318\njp2_dec.c:322\njp2_dec.c:325' >$TMP_DIR/BBtargets.txt
 
     echo $'jas_cm.c:1141\njas_cm.c:1146\njas_cm.c:1149\njas_cm.c:1152\njas_cm.c:1157\njas_cm.c:1160\njas_cm.c:1163\njas_cm.c:1166\njas_cm.c:313\njas_cm.c:314\njas_cm.c:317\njas_cm.c:318\njp2_dec.c:322\njp2_dec.c:325' >$TMP_DIR/changeBBs.txt
@@ -143,7 +143,7 @@ myfuzz() {
     cd ..
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
-    cat $TMP_DIR/commit.diff | /home/radon/Documents/showlinenum/showlinenum.awk show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
+    cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
 
     python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
 
@@ -185,6 +185,7 @@ if ! [[ "$2" =~ ^[0-9]+$ ]]; then
     exit
 fi
 
+export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts/showlinenum.awk
 if [ "$1" == "afl" ]; then
     afl $2
 elif [ "$1" == "aflgo" ]; then
