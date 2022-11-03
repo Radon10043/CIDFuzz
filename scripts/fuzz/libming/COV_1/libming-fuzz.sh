@@ -3,7 +3,7 @@
  # @Author: Radon
  # @Date: 2022-06-28 08:47:33
  # @LastEditors: Radon
- # @LastEditTime: 2022-10-30 22:15:55
+ # @LastEditTime: 2022-11-03 22:18:07
  # @Description: Hi, say something
 ### 
 
@@ -142,14 +142,10 @@ myfuzz() {
 
     # Merge json
     cd $TMP_DIR
-    cat $(ls | grep "bbFunc[0-9]") | jq -s add --tab >bbFunc.json
-    cat $(ls | grep "bbLine[0-9]") | jq -s add --tab >bbLine.json
-    cat $(ls | grep "duVar[0-9]") | jq -s add --tab >duVar.json
-    cat $(ls | grep "funcEntry[0-9]") | jq -s add --tab >funcEntry.json
-    cat $(ls | grep "linebb[0-9]") | jq -s add --tab >linebb.json
-    cat $(ls | grep "funcParam[0-9]") | jq -s add --tab >funcParam.json
-    cat $(ls | grep "callArgs[0-9]") | jq -s add --tab >callArgs.json
-    cat $(ls | grep "maxLine[0-9]") | jq -s add --tab >maxLine.json
+    names=(bbFunc bbLine duVar funcEntry linebb funcParam callArgs maxLine)
+    for name in ${names[@]}; do
+        cat $(ls | grep $name"[0-9]") | jq -s add --tab >$name.json
+    done
 
     # Delete
     rm $(ls | grep "[0-9].json")
