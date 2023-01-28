@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
-# @LastEditors: Radon
-# @LastEditTime: 2023-01-28 15:54:16
+ # @LastEditors: Radon
+ # @LastEditTime: 2023-01-28 16:04:06
 # @Description: Hi, say something
 ###
 
@@ -107,15 +107,15 @@ myfuzz() {
         echo "To be added!"
         exit 1
     elif [ "$2" == "CVE-2016-4489" ]; then # CVE-2016-4489
-        echo $'cplus-dem.c:4839' >$TMP_DIR/BBtargets.txt
+        echo $'cplus-dem.c:4839' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4490" ]; then # CVE-2016-4490
-        echo $'cp-demangle.c:1399' >$TMP_DIR/BBtargets.txt
+        echo $'cp-demangle.c:1399' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
-        echo $'cp-demangle.c:4320' >$TMP_DIR/BBtargets.txt
+        echo $'cp-demangle.c:4320' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
-        echo $'cplus-dem.c:2169' >$TMP_DIR/BBtargets.txt
+        echo $'cplus-dem.c:2169' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
-        echo $'cplus-dem.c:2320' >$TMP_DIR/BBtargets.txt
+        echo $'cplus-dem.c:2320' >$TMP_DIR/tSrcs.txt
     else
         echo "Unsupported target! Supported target:"
         echo "CVE-2016-4487, CVE-2016-4489, CVE-2016-4490"
