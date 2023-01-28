@@ -2,7 +2,7 @@
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
 # @LastEditors: Radon
-# @LastEditTime: 2023-01-27 15:38:38
+# @LastEditTime: 2023-01-28 15:54:16
 # @Description: Hi, say something
 ###
 
@@ -35,16 +35,138 @@ afl() {
 }
 
 aflgo() {
-    echo "AFLGo!"
+    export AFLGO=/home/radon/Documents/fuzzing/fuzzers/aflgo
+    export SUBJECT=$PWD
+    export TMP_DIR=$PWD/obj-aflgo/temp
+    export CC=$AFLGO/afl-clang-fast
+    export CXX=$AFLGO/afl-clang-fast++
+    export LDFLAGS=-lpthread
+    export ADDITIONAL="-targets=$TMP_DIR/BBtargets.txt -outdir=$TMP_DIR -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps"
+    mkdir obj-aflgo && mkdir obj-aflgo/temp
+
+    # Set targets
+    if [ "$2" == "CVE-2016-4487" ]; then # CVE-2016-4487
+        echo $'cxxfilt.c:227\ncxxfilt.c:62\ncplus-dem.c:886\ncplus-dem.c:1203\ncplus-dem.c:1490\ncplus-dem.c:2594\ncplus-dem.c:4319' >$TMP_DIR/BBtargets.txt
+    elif [ "$2" == "CVE-2016-4488" ]; then # CVE-2016-4488
+        echo "To be added!"
+        exit 1
+    elif [ "$2" == "CVE-2016-4489" ]; then # CVE-2016-4489
+        echo $'cplus-dem.c:1190\ncplus-dem.c:3007\ncplus-dem.c:4839\ncplus-dem.c:886\ncxxfilt.c:172\ncxxfilt.c:227\ncxxfilt.c:622' >$TMP_DIR/BBtargets.txt
+    elif [ "$2" == "CVE-2016-4490" ]; then # CVE-2016-4490
+        echo $'cxxfilt.c:227\ncxxfilt.c:62\ncplus-dem.c:864\ncp-demangle.c:6102\ncp-demangle.c:5945\ncp-demangle.c:5894\ncp-demangle.c:1172\ncp-demangle.c:1257\ncp-demangle.c:1399\ncp-demangle.c:1596' >$TMP_DIR/BBtargets.txt
+    elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
+        echo $'cp-demangle.c:4320\ncp-demangle.c:4358\ncp-demangle.c:4929\ncp-demangle.c:4945\ncp-demangle.c:4950\ncp-demangle.c:5394\ncp-demangle.c:5472\ncp-demangle.c:5536\ncp-demangle.c:5540\ncp-demangle.c:5592\ncp-demangle.c:5731' >$TMP_DIR/BBtargets.txt
+    elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
+        echo $'cplus-dem.c:1203\ncplus-dem.c:1642\ncplus-dem.c:2169\ncplus-dem.c:3671\ncplus-dem.c:4231\ncplus-dem.c:4514\ncplus-dem.c:886\ncxxfilt.c:227\n        cxxfilt.c:62' >$TMP_DIR/BBtargets.txt
+    elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
+        echo $'cplus-dem.c:2320\ncplus-dem.c:2436\ncplus-dem.c:2489\ncplus-dem.c:2543\ncplus-dem.c:3811\ncplus-dem.c:4018' >$TMP_DIR/BBtargets.txt
+    else
+        echo "Unsupported target! Supported target:"
+        echo "CVE-2016-4487, CVE-2016-4489, CVE-2016-4490"
+        echo "CVE-2016-4491, CVE-2016-4492, CVE-2016-6131"
+        exit 1
+    fi
+
+    cd obj-aflgo
+    CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error $ADDITIONAL" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
+    make clean all
+    cat $TMP_DIR/BBnames.txt | rev | cut -d: -f2- | rev | sort | uniq >$TMP_DIR/BBnames2.txt && mv $TMP_DIR/BBnames2.txt $TMP_DIR/BBnames.txt
+    cat $TMP_DIR/BBcalls.txt | sort | uniq >$TMP_DIR/BBcalls2.txt && mv $TMP_DIR/BBcalls2.txt $TMP_DIR/BBcalls.txt
+    cd binutils
+    $AFLGO/scripts/genDistance.sh $SUBJECT $TMP_DIR cxxfilt
+
+    cd ../../
+    mkdir obj-dist
+    cd obj-dist # work around because cannot run make distclean
+    CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error -distance=$TMP_DIR/distance.cfg.txt" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
+    make clean all
+
+    mkdir in
+    echo "" >in/in
+    for ((i = 1; i <= $1; i++)); do
+        $AFLGO/afl-fuzz -S secondary -k 480 -m none -z exp -c 7h -i in -o out$i binutils/cxxfilt &
+        $AFLGO/afl-fuzz -M main -k 480 -m none -z exp -c 7h -i in -o out$i binutils/cxxfilt &
+    done
 }
 
 myfuzz() {
-    echo "myfuzz!"
+    export MYFUZZ=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b
+    export SUBJECT=$PWD
+    export TMP_DIR=$PWD/obj-myfuzz-2.52/temp
+    export CC=$MYFUZZ/afl-clang-fast
+    export CXX=$MYFUZZ/afl-clang-fast++
+    export LDFLAGS=-lpthread
+    export ADDITIONAL="-fno-discard-value-names -outdir=$TMP_DIR -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps"
+    mkdir obj-myfuzz-2.52
+    mkdir obj-myfuzz-2.52/temp
+
+    # Set targets
+    if [ "$2" == "CVE-2016-4487" ]; then # CVE-2016-4487
+        echo $'cplus-dem.c:4319' >$TMP_DIR/tSrcs.txt
+    elif [ "$2" == "CVE-2016-4488" ]; then # CVE-2016-4488
+        echo "To be added!"
+        exit 1
+    elif [ "$2" == "CVE-2016-4489" ]; then # CVE-2016-4489
+        echo $'cplus-dem.c:4839' >$TMP_DIR/BBtargets.txt
+    elif [ "$2" == "CVE-2016-4490" ]; then # CVE-2016-4490
+        echo $'cp-demangle.c:1399' >$TMP_DIR/BBtargets.txt
+    elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
+        echo $'cp-demangle.c:4320' >$TMP_DIR/BBtargets.txt
+    elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
+        echo $'cplus-dem.c:2169' >$TMP_DIR/BBtargets.txt
+    elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
+        echo $'cplus-dem.c:2320' >$TMP_DIR/BBtargets.txt
+    else
+        echo "Unsupported target! Supported target:"
+        echo "CVE-2016-4487, CVE-2016-4489, CVE-2016-4490"
+        echo "CVE-2016-4491, CVE-2016-4492, CVE-2016-6131"
+        exit 1
+    fi
+
+    cd obj-myfuzz-2.52
+    CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error $ADDITIONAL" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
+    make clean all
+
+    cat $TMP_DIR/BBnames.txt | rev | cut -d: -f2- | rev | sort | uniq >$TMP_DIR/BBnames2.txt && mv $TMP_DIR/BBnames2.txt $TMP_DIR/BBnames.txt
+    cat $TMP_DIR/BBcalls.txt | sort | uniq >$TMP_DIR/BBcalls2.txt && mv $TMP_DIR/BBcalls2.txt $TMP_DIR/BBcalls.txt
+
+    # Format json
+    for jsonf in $(ls $TMP_DIR | grep .json); do
+        cat $TMP_DIR/${jsonf} | jq --tab . >$TMP_DIR/temp.json
+        mv $TMP_DIR/temp.json $TMP_DIR/${jsonf}
+    done
+
+    # Merge json
+    cd $TMP_DIR
+    names=(bbFunc bbLine duVar funcEntry linebb funcParam callArgs maxLine)
+    for name in ${names[@]}; do
+        cat $(ls | grep $name"[0-9]") | jq -s add --tab >$name.json
+    done
+
+    # Delete
+    rm $(ls | grep "[0-9].json")
+    cd ..
+
+    # Calculate fitness
+    python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
+
+    CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error -mydist=$TMP_DIR/mydist.cfg.txt" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
+    make clean all
+
+    mkdir in
+    echo "" >in/in
+
+    # Run [x] times ...
+    for ((i = 1; i <= $1; i++)); do
+        $MYFUZZ/afl-fuzz -k 480 -m none -i in -o out$i -S secondary binutils/cxxfilt &
+        $MYFUZZ/afl-fuzz -k 480 -m none -i in -o out$i -M main binutils/cxxfilt &
+    done
 }
 
 # Entry
 # 第一个参数是表示用哪个工具进行测试
 # 第二个参数是数字, 表示重复fuzz多少次
+# 第三个参数是编号, 表示对哪个漏洞进行定向测试, e.g. CVE-2016-4487
 
 download
 
@@ -59,9 +181,9 @@ export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts
 if [ "$1" == "afl" ]; then
     afl $2
 elif [ "$1" == "aflgo" ]; then
-    aflgo $2
+    aflgo $2 $3
 elif [ "$1" == "myfuzz" ]; then
-    myfuzz $2
+    myfuzz $2 $3
 else
     echo "Unknown fuzzer: $1"
     echo "Supported fuzzers: afl, aflgo, myfuzz"
