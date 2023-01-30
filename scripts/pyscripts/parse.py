@@ -2,7 +2,7 @@
 Author: Radon
 Date: 2022-02-05 16:20:42
 LastEditors: Radon
-LastEditTime: 2022-06-28 09:45:41
+LastEditTime: 2023-01-30 23:14:57
 Description: Hi, say something
 '''
 import argparse
@@ -383,13 +383,16 @@ def distanceCalculation(path: str, dotPath: str, tSrcsFile: str):
         while not preQueue.empty():
             targetLabel, cgDist, preSet = preQueue.get()
 
-            if targetLabel in visited:
+            if targetLabel in visited or LINE_BB_DICT[targetLabel] in visited:
+                print("Pre analyzing " + targetLabel + "..., Skip, len: ", preQueue.qsize())
                 continue
 
             if cgDist > MAX_CONCERN_DIST:
+                print("Pre analyzing " + targetLabel + "..., Skip, len: ", preQueue.qsize())
+                visited.add(targetLabel)
                 continue
 
-            print("Pre analyzing " + targetLabel + "..., cgDist: ", cgDist)
+            print("Pre analyzing " + targetLabel + "..., cgDist: ", cgDist, ", len: ", preQueue.qsize())
 
             # TODO: 目前遇到结构体数组会出错, 因为获取定义-使用关系时是根据指令的op获取变量名
             # 但LLVM在遇到结构体数组时似乎不会把它当作一个op, 目前还没想到解决办法
@@ -476,6 +479,7 @@ def distanceCalculation(path: str, dotPath: str, tSrcsFile: str):
 
             # 如果没有函数调用了func, 证明前向分析到头了, 不需要再往队列里添加元素了
             if not func in LINE_CALLS_PRE_DICT.keys():
+                visited.add(targetLabel)
                 continue
 
             # 将调用了当前函数的bb和cgDist加入队列
@@ -498,13 +502,15 @@ def distanceCalculation(path: str, dotPath: str, tSrcsFile: str):
         while not backQueue.empty():
             targetLabel, cgDist, backSet = backQueue.get()
 
-            if targetLabel in visited:
+            if targetLabel in visited or LINE_BB_DICT[targetLabel] in visited:
+                print("Back analyzing " + targetLabel + "..., Skip, len: ", backQueue.qsize())
                 continue
 
             if cgDist > MAX_CONCERN_DIST:
+                print("Back analyzing " + targetLabel + "..., Skip, len: ", backQueue.qsize())
                 continue
 
-            print("Back analyzing " + targetLabel + "..., cgDist: ", cgDist)
+            print("Back analyzing " + targetLabel + "..., cgDist: ", cgDist, ", len: ", backQueue.qsize())
 
             targetLabel = getbbBackTainted(targetLabel, backSet)
 
@@ -520,6 +526,7 @@ def distanceCalculation(path: str, dotPath: str, tSrcsFile: str):
 
             # 若无法获取target的name, 跳过
             if len(targetName) == 0:
+                visited.add(targetLabel)
                 continue
 
             # 获取以污点源为起点, 能被它到达的基本块, 达成后向污点分析的效果
