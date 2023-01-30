@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
- # @LastEditors: Radon
- # @LastEditTime: 2023-01-28 16:04:06
+# @LastEditors: Radon
+# @LastEditTime: 2023-01-30 13:54:01
 # @Description: Hi, say something
 ###
 
@@ -19,7 +19,6 @@ afl() {
     export CC=$AFL/afl-clang-fast
     export CXX=$AFL/afl-clang-fast++
     export LDFLAGS=-lpthread
-    export AFL_NO_UI=1
 
     mkdir obj-afl && cd obj-afl
     CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
@@ -29,8 +28,7 @@ afl() {
     echo "" >in/in
     # Run [x] times ...
     for ((i = 1; i <= $1; i++)); do
-        $AFL/afl-fuzz -S secondary -i in -o out$i -m none -k 480 binutils/cxxfilt &
-        $AFL/afl-fuzz -M main -i in -o out$i -m none -k 480 binutils/cxxfilt &
+        $AFL/afl-fuzz -i in -o out$i -m none -k 480 binutils/cxxfilt &
     done
 }
 
@@ -84,8 +82,7 @@ aflgo() {
     mkdir in
     echo "" >in/in
     for ((i = 1; i <= $1; i++)); do
-        $AFLGO/afl-fuzz -S secondary -k 480 -m none -z exp -c 7h -i in -o out$i binutils/cxxfilt &
-        $AFLGO/afl-fuzz -M main -k 480 -m none -z exp -c 7h -i in -o out$i binutils/cxxfilt &
+        $AFLGO/afl-fuzz -k 480 -m none -z exp -c 7h -i in -o out$i binutils/cxxfilt &
     done
 }
 
@@ -150,6 +147,8 @@ myfuzz() {
     # Calculate fitness
     python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
 
+    cd ../../
+    mkdir obj-cidist && cd obj-cidist
     CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error -mydist=$TMP_DIR/mydist.cfg.txt" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
     make clean all
 
@@ -158,8 +157,7 @@ myfuzz() {
 
     # Run [x] times ...
     for ((i = 1; i <= $1; i++)); do
-        $MYFUZZ/afl-fuzz -k 480 -m none -i in -o out$i -S secondary binutils/cxxfilt &
-        $MYFUZZ/afl-fuzz -k 480 -m none -i in -o out$i -M main binutils/cxxfilt &
+        $MYFUZZ/afl-fuzz -k 480 -m none -i in -o out$i binutils/cxxfilt &
     done
 }
 
@@ -178,6 +176,7 @@ fi
 echo "$2 is a number, yeah!"
 
 export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts/showlinenum.awk
+export AFL_NO_UI=1
 if [ "$1" == "afl" ]; then
     afl $2
 elif [ "$1" == "aflgo" ]; then
