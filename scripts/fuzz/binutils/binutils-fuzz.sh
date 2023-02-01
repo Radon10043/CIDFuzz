@@ -2,7 +2,7 @@
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
 # @LastEditors: Radon
-# @LastEditTime: 2023-01-30 13:54:01
+# @LastEditTime: 2023-01-31 16:22:45
 # @Description: Hi, say something
 ###
 
@@ -12,6 +12,12 @@ download() {
     cp -r SRC binutils-2c49145
     cd binutils-2c49145
     git checkout 2c49145
+}
+
+patch() {
+    echo "I'm going to patch CVE-2016-4487, are you sure?"
+    sleep 4s
+    sed -i "1239a work->bsize = 0;" libiberty/cplus-dem.c
 }
 
 afl() {
@@ -177,6 +183,12 @@ echo "$2 is a number, yeah!"
 
 export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts/showlinenum.awk
 export AFL_NO_UI=1
+
+PATCH_2016_4487=0
+if [ "$3" == "CVE-2016-4488" ]; then
+    PATCH_2016_4487=1
+fi
+
 if [ "$1" == "afl" ]; then
     afl $2
 elif [ "$1" == "aflgo" ]; then

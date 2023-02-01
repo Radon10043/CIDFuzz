@@ -9,6 +9,6 @@
 for ((i = 1; i <= 20; i++)); do
     cd out$i/crashes
     if [ -f '0.txt' ]; then rm 0.txt; fi
-    for f in $(ls | grep id); do echo -e "\n${f}" | cut -d ',' -f 1-3 >>0.txt | cat $f | /home/radon/Documents/fuzzing/CIProjs/binutils/ASAN/obj-asan/binutils/cxxfilt 2>&1 | grep '#[0-2]' | tee -a 0.txt; done
+    for f in $(ls | grep id); do echo -e "\n${f}" | cut -d ',' -f 1-3 >>0.txt | cat $f | /home/radon/Documents/fuzzing/CIProjs/binutils/ASAN/obj-asan/binutils/cxxfilt 2>&1 | egrep '(SUMMARY|#[0-9])' | tee -a 0.txt; done
     cd ../../
 done

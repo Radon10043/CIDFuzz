@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2023-01-27 14:20:09
- # @LastEditors: Radon
- # @LastEditTime: 2023-01-30 13:59:07
+# @LastEditors: Radon
+# @LastEditTime: 2023-01-31 16:25:10
 # @Description: Hi, say something
 ###
 git clone git://sourceware.org/git/binutils-gdb.git SRC
@@ -15,9 +15,20 @@ export CC=clang
 export CXX=clang++
 export LDFLAGS=-lpthread
 export ASAN_OPTIONS="detect_leaks=0"
+PATCH_2016_4487=0
+
+if [ "$1" == "patch" ]; then
+    PATCH_2016_4487=1
+fi
+
+if [ $PATCH_2016_4487 -eq 1 ]; then
+    echo "I'm going to patch CVE-2016-4487, are you sure?"
+    sleep 4s
+    sed -i "1239a work->bsize = 0;" libiberty/cplus-dem.c
+fi
 
 mkdir obj-asan && cd obj-asan
 CFLAGS="-fsanitize=address -DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
 make clean all
 
-# for f in `ls | grep id`; do echo -e "\n${f}" | cut -d ',' -f 1-3 >> 0.txt | cat $f | /home/radon/Documents/fuzzing/CIProjs/binutils/ASAN/obj-asan/binutils/cxxfilt 2>&1 | grep '#[0-2] ' | tee -a 0.txt; done
+# for f in `ls | grep id`; do echo -e "\n${f}" | cut -d ',' -f 1-3 >> 0.txt | cat $f | /home/radon/Documents/fuzzing/CIProjs/binutils/ASAN/obj-asan/binutils/cxxfilt 2>&1 | egrep 'SUMMARY|#[0-9] ' | tee -a 0.txt; done
