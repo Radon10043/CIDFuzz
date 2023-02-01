@@ -2,7 +2,7 @@
 Author: Radon
 Date: 2022-02-05 16:20:42
 LastEditors: Radon
-LastEditTime: 2023-01-30 23:14:57
+LastEditTime: 2023-02-01 18:20:30
 Description: Hi, say something
 '''
 import argparse
@@ -421,7 +421,9 @@ def distanceCalculation(path: str, dotPath: str, tSrcsFile: str):
 
             # 获取以污点源为终点, 能到达它的基本块, 达成前向分析的效果
             for node in nodes:
-                nodeLabel = node.get("label").lstrip("\"{").rstrip(":}\"")
+                # 有时候node.get完后是None? 这种情况下跳过
+                try: nodeLabel = node.get("label").lstrip("\"{").rstrip(":}\"")
+                except: continue
                 nodeName = node.obj_dict["name"]
 
                 if len(nodeLabel.split(":")) > 2:
@@ -531,7 +533,9 @@ def distanceCalculation(path: str, dotPath: str, tSrcsFile: str):
 
             # 获取以污点源为起点, 能被它到达的基本块, 达成后向污点分析的效果
             for node in nodes:
-                nodeLabel = node.get("label").lstrip("\"{").rstrip(":}\"")
+                # 有时候node.get完后是None? 这种情况下跳过
+                try: nodeLabel = node.get("label").lstrip("\"{").rstrip(":}\"")
+                except: continue
                 nodeName = node.obj_dict["name"]
 
                 if len(nodeLabel.split(":")) > 2:
