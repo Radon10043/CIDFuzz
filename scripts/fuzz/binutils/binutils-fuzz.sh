@@ -153,7 +153,7 @@ myfuzz() {
     # Calculate fitness
     python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
 
-    cd ../../
+    cd ../
     mkdir obj-cidist && cd obj-cidist
     CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error -mydist=$TMP_DIR/mydist.cfg.txt" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
     make clean all
