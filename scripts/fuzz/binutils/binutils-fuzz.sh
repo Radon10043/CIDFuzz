@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
- # @LastEditors: Radon
- # @LastEditTime: 2023-02-02 11:04:52
+# @LastEditors: Radon
+# @LastEditTime: 2023-02-02 11:13:23
 # @Description: Hi, say something
 ###
 
@@ -55,7 +55,7 @@ aflgo() {
         echo "To be added!"
         exit 1
     elif [ "$2" == "CVE-2016-4489" ]; then # CVE-2016-4489
-        echo $'cplus-dem.c:1190\ncplus-dem.c:3007\ncplus-dem.c:4839\ncplus-dem.c:886\ncxxfilt.c:172\ncxxfilt.c:227\ncxxfilt.c:622' >$TMP_DIR/BBtargets.txt
+        echo $'cplus-dem.c:1190\ncplus-dem.c:3007\ncplus-dem.c:4839\ncplus-dem.c:886\ncxxfilt.c:172\ncxxfilt.c:227\ncxxfilt.c:62' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-4490" ]; then # CVE-2016-4490
         echo $'cxxfilt.c:227\ncxxfilt.c:62\ncplus-dem.c:864\ncp-demangle.c:6102\ncp-demangle.c:5945\ncp-demangle.c:5894\ncp-demangle.c:1172\ncp-demangle.c:1257\ncp-demangle.c:1399\ncp-demangle.c:1596' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
