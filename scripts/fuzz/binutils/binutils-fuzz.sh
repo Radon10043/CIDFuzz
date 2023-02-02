@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
-# @LastEditors: Radon
-# @LastEditTime: 2023-01-31 16:22:45
+ # @LastEditors: Radon
+ # @LastEditTime: 2023-02-02 11:04:52
 # @Description: Hi, say something
 ###
 
@@ -112,7 +112,7 @@ myfuzz() {
     elif [ "$2" == "CVE-2016-4489" ]; then # CVE-2016-4489
         echo $'cplus-dem.c:4839' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4490" ]; then # CVE-2016-4490
-        echo $'cp-demangle.c:1399' >$TMP_DIR/tSrcs.txt
+        echo $'cp-demangle.c:1596' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
         echo $'cp-demangle.c:4320' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
