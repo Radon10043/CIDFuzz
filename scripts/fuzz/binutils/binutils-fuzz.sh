@@ -2,7 +2,7 @@
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
  # @LastEditors: Radon
- # @LastEditTime: 2023-02-03 14:42:30
+ # @LastEditTime: 2023-02-03 20:23:22
 # @Description: Hi, say something
 ###
 
@@ -60,7 +60,7 @@ aflgo() {
     elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
         echo $'cp-demangle.c:4320\ncp-demangle.c:4358\ncp-demangle.c:4929\ncp-demangle.c:4945\ncp-demangle.c:4950\ncp-demangle.c:5394\ncp-demangle.c:5472\ncp-demangle.c:5536\ncp-demangle.c:5540\ncp-demangle.c:5592\ncp-demangle.c:5731' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
-        echo $'cplus-dem.c:1203\ncplus-dem.c:1642\ncplus-dem.c:2169\ncplus-dem.c:3671\ncplus-dem.c:4231\ncplus-dem.c:4514\ncplus-dem.c:886\ncxxfilt.c:227\ncxxfilt.c:62' >$TMP_DIR/BBtargets.txt
+        echo $'cplus-dem.c:1203\ncplus-dem.c:1642\ncplus-dem.c:3606\ncplus-dem.c:4231\ncplus-dem.c:4514\ncplus-dem.c:886\ncxxfilt.c:227\ncxxfilt.c:62' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
         echo $'cplus-dem.c:2320\ncplus-dem.c:2436\ncplus-dem.c:2489\ncplus-dem.c:2543\ncplus-dem.c:3811\ncplus-dem.c:4018' >$TMP_DIR/BBtargets.txt
     else
@@ -114,7 +114,7 @@ myfuzz() {
     elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
         echo $'cp-demangle.c:4320' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
-        echo $'cplus-dem.c:2169' >$TMP_DIR/tSrcs.txt
+        echo $'cplus-dem.c:3606' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
         echo $'cplus-dem.c:2320' >$TMP_DIR/tSrcs.txt
     else
