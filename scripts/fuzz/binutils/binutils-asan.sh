@@ -2,9 +2,11 @@
 # @Author: Radon
 # @Date: 2023-01-27 14:20:09
 # @LastEditors: Radon
-# @LastEditTime: 2023-01-31 16:25:10
+# @LastEditTime: 2023-02-03 14:21:00
 # @Description: Hi, say something
 ###
+read -p "Do you want to patch CVE-2016-4487? y/n: " res
+
 git clone git://sourceware.org/git/binutils-gdb.git SRC
 rm -rf ASAN
 cp -r SRC ASAN
@@ -15,15 +17,9 @@ export CC=clang
 export CXX=clang++
 export LDFLAGS=-lpthread
 export ASAN_OPTIONS="detect_leaks=0"
-PATCH_2016_4487=0
 
-if [ "$1" == "patch" ]; then
-    PATCH_2016_4487=1
-fi
-
-if [ $PATCH_2016_4487 -eq 1 ]; then
-    echo "I'm going to patch CVE-2016-4487, are you sure?"
-    sleep 4s
+# Patch CVE-2016-4487
+if [ "$res" == "y" ]; then
     sed -i "1239a work->bsize = 0;" libiberty/cplus-dem.c
 fi
 

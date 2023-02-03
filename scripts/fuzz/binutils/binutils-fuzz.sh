@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
-# @LastEditors: Radon
-# @LastEditTime: 2023-02-02 11:13:23
+ # @LastEditors: Radon
+ # @LastEditTime: 2023-02-03 14:42:30
 # @Description: Hi, say something
 ###
 
@@ -52,8 +52,7 @@ aflgo() {
     if [ "$2" == "CVE-2016-4487" ]; then # CVE-2016-4487
         echo $'cxxfilt.c:227\ncxxfilt.c:62\ncplus-dem.c:886\ncplus-dem.c:1203\ncplus-dem.c:1490\ncplus-dem.c:2594\ncplus-dem.c:4319' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-4488" ]; then # CVE-2016-4488
-        echo "To be added!"
-        exit 1
+        echo $'cplus-dem.c:1203\ncplus-dem.c:1491\ncplus-dem.c:2618\ncplus-dem.c:4293\ncplus-dem.c:886\ncxxfilt.c:227\ncxxfilt.c:62' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-4489" ]; then # CVE-2016-4489
         echo $'cplus-dem.c:1190\ncplus-dem.c:3007\ncplus-dem.c:4839\ncplus-dem.c:886\ncxxfilt.c:172\ncxxfilt.c:227\ncxxfilt.c:62' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-4490" ]; then # CVE-2016-4490
@@ -61,12 +60,12 @@ aflgo() {
     elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
         echo $'cp-demangle.c:4320\ncp-demangle.c:4358\ncp-demangle.c:4929\ncp-demangle.c:4945\ncp-demangle.c:4950\ncp-demangle.c:5394\ncp-demangle.c:5472\ncp-demangle.c:5536\ncp-demangle.c:5540\ncp-demangle.c:5592\ncp-demangle.c:5731' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
-        echo $'cplus-dem.c:1203\ncplus-dem.c:1642\ncplus-dem.c:2169\ncplus-dem.c:3671\ncplus-dem.c:4231\ncplus-dem.c:4514\ncplus-dem.c:886\ncxxfilt.c:227\n        cxxfilt.c:62' >$TMP_DIR/BBtargets.txt
+        echo $'cplus-dem.c:1203\ncplus-dem.c:1642\ncplus-dem.c:2169\ncplus-dem.c:3671\ncplus-dem.c:4231\ncplus-dem.c:4514\ncplus-dem.c:886\ncxxfilt.c:227\ncxxfilt.c:62' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
         echo $'cplus-dem.c:2320\ncplus-dem.c:2436\ncplus-dem.c:2489\ncplus-dem.c:2543\ncplus-dem.c:3811\ncplus-dem.c:4018' >$TMP_DIR/BBtargets.txt
     else
         echo "Unsupported target! Supported target:"
-        echo "CVE-2016-4487, CVE-2016-4489, CVE-2016-4490"
+        echo "CVE-2016-4487, CVE-2016-4488, CVE-2016-4489, CVE-2016-4490"
         echo "CVE-2016-4491, CVE-2016-4492, CVE-2016-6131"
         exit 1
     fi
@@ -107,8 +106,7 @@ myfuzz() {
     if [ "$2" == "CVE-2016-4487" ]; then # CVE-2016-4487
         echo $'cplus-dem.c:4319' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4488" ]; then # CVE-2016-4488
-        echo "To be added!"
-        exit 1
+        echo "cplus-dem.c:4293" >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4489" ]; then # CVE-2016-4489
         echo $'cplus-dem.c:4839' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4490" ]; then # CVE-2016-4490
@@ -121,7 +119,7 @@ myfuzz() {
         echo $'cplus-dem.c:2320' >$TMP_DIR/tSrcs.txt
     else
         echo "Unsupported target! Supported target:"
-        echo "CVE-2016-4487, CVE-2016-4489, CVE-2016-4490"
+        echo "CVE-2016-4487, CVE-2016-4488, CVE-2016-4489, CVE-2016-4490"
         echo "CVE-2016-4491, CVE-2016-4492, CVE-2016-6131"
         exit 1
     fi
@@ -172,22 +170,30 @@ myfuzz() {
 # 第二个参数是数字, 表示重复fuzz多少次
 # 第三个参数是编号, 表示对哪个漏洞进行定向测试, e.g. CVE-2016-4487
 
-download
+export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts/showlinenum.awk
+export AFL_NO_UI=1
 
 if ! [[ "$2" =~ ^[0-9]+$ ]]; then
     echo "$2 is not a number."
     exit
 fi
-
 echo "$2 is a number, yeah!"
-
-export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts/showlinenum.awk
-export AFL_NO_UI=1
 
 PATCH_2016_4487=0
 if [ "$3" == "CVE-2016-4488" ]; then
-    PATCH_2016_4487=1
+    echo "If you want to detect CVE-2016-4488, you need patch CVE-216-4487 first."
+    read -p "Are you sure? y/n: " >res
+    if [ "$res" == "y" ]; then
+        PATCH_2016_4487=1
+        echo "Okay, I will patch CVE-2016-4487."
+    else
+        echo "Stop."
+        exit 1
+    fi
 fi
+
+download
+if [ $PATCH_2016_4487 -eq 1 ]; then patch; fi
 
 if [ "$1" == "afl" ]; then
     afl $2
