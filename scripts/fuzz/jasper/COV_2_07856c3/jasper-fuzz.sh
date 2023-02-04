@@ -73,8 +73,7 @@ aflgo() {
     cat $TMP_DIR/BBcalls.txt | sort | uniq >$TMP_DIR/BBcalls2.txt && mv $TMP_DIR/BBcalls2.txt $TMP_DIR/BBcalls.txt
 
     cd src/app
-    echo "" > $TMP_DIR/distance.cfg.txt
-    $AFLGO/scripts/genDistance.sh $SUBJECT $TMP_DIR jasper
+    $AFLGO/scripts/genDistance.sh $SUBJECT $TMP_DIR
 
     cd $SUBJECT
     mkdir obj-aflgo2
@@ -83,7 +82,6 @@ aflgo() {
     mv obj-aflgo2 obj-aflgo
     cd obj-aflgo
 
-    # Gen distance failed
     export ADDITIONAL="-distance=$TMP_DIR/distance.cfg.txt -changes=$TMP_DIR/changeBBs.txt"
     CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" cmake ..
     make clean all
