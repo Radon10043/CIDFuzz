@@ -2,7 +2,7 @@
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
  # @LastEditors: Radon
- # @LastEditTime: 2023-02-03 20:23:22
+ # @LastEditTime: 2023-02-05 21:02:53
 # @Description: Hi, say something
 ###
 
@@ -62,7 +62,7 @@ aflgo() {
     elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
         echo $'cplus-dem.c:1203\ncplus-dem.c:1642\ncplus-dem.c:3606\ncplus-dem.c:4231\ncplus-dem.c:4514\ncplus-dem.c:886\ncxxfilt.c:227\ncxxfilt.c:62' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
-        echo $'cplus-dem.c:2320\ncplus-dem.c:2436\ncplus-dem.c:2489\ncplus-dem.c:2543\ncplus-dem.c:3811\ncplus-dem.c:4018' >$TMP_DIR/BBtargets.txt
+        echo $'cxxfilt.c:227\ncxxfilt.c:62\ncplus-dem.c:886\ncplus-dem.c:1203\ncplus-dem.c:1665\ncplus-dem.c:4498\ncplus-dem.c:4231\ncplus-dem.c:3811\ncplus-dem.c:4018\ncplus-dem.c:2543\ncplus-dem.c:2489' >$TMP_DIR/BBtargets.txt
     else
         echo "Unsupported target! Supported target:"
         echo "CVE-2016-4487, CVE-2016-4488, CVE-2016-4489, CVE-2016-4490"
@@ -116,7 +116,7 @@ myfuzz() {
     elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
         echo $'cplus-dem.c:3606' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
-        echo $'cplus-dem.c:2320' >$TMP_DIR/tSrcs.txt
+        echo $'cplus-dem.c:3811\ncplus-dem.c:4018\ncplus-dem.c:2543\ncplus-dem.c:2489' >$TMP_DIR/tSrcs.txt
     else
         echo "Unsupported target! Supported target:"
         echo "CVE-2016-4487, CVE-2016-4488, CVE-2016-4489, CVE-2016-4490"
