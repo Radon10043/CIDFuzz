@@ -2,7 +2,7 @@
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
  # @LastEditors: Radon
- # @LastEditTime: 2023-02-06 15:07:43
+ # @LastEditTime: 2023-02-06 22:11:45
 # @Description: Hi, say something
 ###
 
@@ -12,12 +12,6 @@ download() {
     cp -r SRC binutils-2c49145
     cd binutils-2c49145
     git checkout 2c49145
-}
-
-patch() {
-    echo "I'm going to patch CVE-2016-4487, are you sure?"
-    sleep 4s
-    sed -i "1239a work->bsize = 0;" libiberty/cplus-dem.c
 }
 
 afl() {
@@ -179,21 +173,7 @@ if ! [[ "$2" =~ ^[0-9]+$ ]]; then
 fi
 echo "$2 is a number, yeah!"
 
-PATCH_2016_4487=0
-if [ "$3" == "CVE-2016-4488" ]; then
-    echo "If you want to detect CVE-2016-4488, you need patch CVE-216-4487 first."
-    read -p "Are you sure? y/n: " >res
-    if [ "$res" == "y" ]; then
-        PATCH_2016_4487=1
-        echo "Okay, I will patch CVE-2016-4487."
-    else
-        echo "Stop."
-        exit 1
-    fi
-fi
-
 download
-if [ $PATCH_2016_4487 -eq 1 ]; then patch; fi
 
 if [ "$1" == "afl" ]; then
     afl $2
