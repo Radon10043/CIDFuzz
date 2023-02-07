@@ -10,10 +10,11 @@ The specific process is as follows:
 
 # How to perform fuzzing with CIDFuzz
 
-1. Run building script
+1. Download and install deps
 
 ```shell
-sudo ./aflgo-build.sh
+cd /path/to/CIDFuzz/scripts/build
+sudo ./cidfuzz-build.sh
 ```
 
 2. Compile CIDFuzz and LLVM-instrumentation pass
