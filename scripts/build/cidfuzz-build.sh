@@ -1,9 +1,19 @@
 #!/bin/bash
 set -e # exit on error
 
-# Build clang & LLVM
-LLVM_DEP_PACKAGES="build-essential make cmake ninja-build git binutils-gold binutils-dev curl wget"
+# Install deps
+LLVM_DEP_PACKAGES="build-essential make ninja-build git binutils-gold binutils-dev curl wget"
 apt-get install -y $LLVM_DEP_PACKAGES
+
+# Install g++-10
+add-apt-repository ppa:ubuntu-toolchain-r/test
+apt install g++-10
+
+# Set gcc-10, g++-10 to high priority
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 1
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 2
+update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 1
+update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 2
 
 UBUNTU_VERSION=`cat /etc/os-release | grep VERSION_ID | cut -d= -f 2`
 UBUNTU_YEAR=`echo $UBUNTU_VERSION | cut -d. -f 1`
@@ -20,6 +30,17 @@ unset CFLAGS
 unset CXXFLAGS
 
 mkdir ~/build; cd ~/build
+
+# build cmake-3.13.4
+wget https://github.com/Kitware/CMake/releases/download/v3.13.4/cmake-3.13.4.tar.gz
+tar zxvf cmake-3.13.4.tar.gz
+cd cmake-3.13.4
+./bootstrap
+make
+make install
+cd ..
+
+# build LLVM & clang
 mkdir llvm_tools; cd llvm_tools
 wget https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/llvm-11.0.0.src.tar.xz
 wget https://github.com/llvm/llvm-project/releases/download/llvmorg-11.0.0/clang-11.0.0.src.tar.xz
@@ -50,7 +71,7 @@ cmake -G "Ninja" \
       -DLLVM_USE_SANITIZER=Memory -DCMAKE_INSTALL_PREFIX=/usr/msan/ \
       -DLIBCXX_ENABLE_SHARED=OFF -DLIBCXX_ENABLE_STATIC_ABI_LIBRARY=ON \
       -DCMAKE_BUILD_TYPE=Release -DLLVM_TARGETS_TO_BUILD="X86" \
-       ~/build/llvm_tools/llvm-11.0.0.src
+      ~/build/llvm_tools/llvm-11.0.0.src
 ninja cxx; ninja install-cxx
 
 # Install LLVMgold in bfd-plugins
@@ -64,13 +85,3 @@ apt-get update
 apt install -y python-dev python3 python3-dev python3-pip autoconf automake libtool-bin python-bs4 libboost-all-dev # libclang-11.0-dev
 python3 -m pip install --upgrade pip
 python3 -m pip install networkx pydot pydotplus
-
-export CXX=clang++
-export CC=clang
-# build AFLGo
-git clone https://github.com/aflgo/aflgo.git
-cd aflgo
-make clean all
-pushd llvm_mode; make clean all; popd
-pushd distance_calculator; cmake -G Ninja ./; cmake --build ./; popd
-export AFLGO=`pwd`/aflgo
