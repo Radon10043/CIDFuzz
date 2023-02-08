@@ -3,7 +3,7 @@ set -e # exit on error
 
 # Install deps
 add-apt-repository -y ppa:ubuntu-toolchain-r/test
-DEP_PACKAGES="build-essential make ninja-build git binutils-gold binutils-dev curl wget g++-10 jq python3.8"
+DEP_PACKAGES="build-essential make ninja-build git binutils-gold binutils-dev curl wget g++-10 jq python python3.8"
 apt-get install -y $DEP_PACKAGES
 
 # gcc-10 and g++-10 have high priority
