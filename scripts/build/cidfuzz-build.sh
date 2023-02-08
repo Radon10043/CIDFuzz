@@ -2,18 +2,19 @@
 set -e # exit on error
 
 # Install deps
-LLVM_DEP_PACKAGES="build-essential make ninja-build git binutils-gold binutils-dev curl wget"
-apt-get install -y $LLVM_DEP_PACKAGES
+add-apt-repository -y ppa:ubuntu-toolchain-r/test
+DEP_PACKAGES="build-essential make ninja-build git binutils-gold binutils-dev curl wget g++-10 jq python3.8"
+apt-get install -y $DEP_PACKAGES
 
-# Install g++-10
-add-apt-repository ppa:ubuntu-toolchain-r/test
-apt install g++-10
-
-# Set gcc-10, g++-10 to high priority
+# gcc-10 and g++-10 have high priority
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 1
 update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 2
 update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-7 1
 update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 2
+
+# python3.8 has high priority
+update-alternatives --install /usr/bin/python python /usr/bin/python2.7 1
+update-alternatives --install /usr/bin/python python /usr/bin/python3.8 2
 
 UBUNTU_VERSION=`cat /etc/os-release | grep VERSION_ID | cut -d= -f 2`
 UBUNTU_YEAR=`echo $UBUNTU_VERSION | cut -d. -f 1`
@@ -83,5 +84,5 @@ cp /usr/local/lib/LLVMgold.so /usr/lib/bfd-plugins
 export LC_ALL=C
 apt-get update
 apt install -y python-dev python3 python3-dev python3-pip autoconf automake libtool-bin python-bs4 libboost-all-dev # libclang-11.0-dev
-python3 -m pip install --upgrade pip
-python3 -m pip install networkx pydot pydotplus
+python -m pip install --upgrade pip
+python -m pip install networkx pydot pydotplus
