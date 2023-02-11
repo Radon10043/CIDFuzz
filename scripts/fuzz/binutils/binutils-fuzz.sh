@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
- # @LastEditors: Radon
- # @LastEditTime: 2023-02-06 22:11:45
+# @LastEditors: Radon
+# @LastEditTime: 2023-02-11 10:49:16
 # @Description: Hi, say something
 ###
 
@@ -28,7 +28,7 @@ afl() {
     echo "" >in/in
     # Run [x] times ...
     for ((i = 1; i <= $1; i++)); do
-        $AFL/afl-fuzz -i in -o out$i -m none -k 480 binutils/cxxfilt &
+        $AFL/afl-fuzz -d -i in -o out$i -m none -k 480 binutils/cxxfilt &
     done
 }
 
@@ -54,7 +54,7 @@ aflgo() {
     elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
         echo $'cp-demangle.c:4320\ncp-demangle.c:4358\ncp-demangle.c:4929\ncp-demangle.c:4945\ncp-demangle.c:4950\ncp-demangle.c:5394\ncp-demangle.c:5472\ncp-demangle.c:5536\ncp-demangle.c:5540\ncp-demangle.c:5592\ncp-demangle.c:5731' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
-        echo $'cplus-dem.c:1203\ncplus-dem.c:1642\ncplus-dem.c:3606\ncplus-dem.c:4231\ncplus-dem.c:4514\ncplus-dem.c:886\ncxxfilt.c:227\ncxxfilt.c:62' >$TMP_DIR/BBtargets.txt
+        echo $'cplus-dem.c:1203\ncplus-dem.c:1562\ncplus-dem.c:1642\ncplus-dem.c:2169\ncplus-dem.c:2229\ncplus-dem.c:3606\ncplus-dem.c:3671\ncplus-dem.c:3781\ncplus-dem.c:4231\ncplus-dem.c:4514\ncplus-dem.c:886\ncxxfilt.c:227\ncxxfilt.c:62' >$TMP_DIR/BBtargets.txt
     elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
         echo $'cxxfilt.c:227\ncxxfilt.c:62\ncplus-dem.c:886\ncplus-dem.c:1203\ncplus-dem.c:1665\ncplus-dem.c:4498\ncplus-dem.c:4231\ncplus-dem.c:3811\ncplus-dem.c:4018\ncplus-dem.c:2543\ncplus-dem.c:2489' >$TMP_DIR/BBtargets.txt
     else
@@ -81,7 +81,7 @@ aflgo() {
     mkdir in
     echo "" >in/in
     for ((i = 1; i <= $1; i++)); do
-        $AFLGO/afl-fuzz -k 480 -m none -z exp -c 7h -i in -o out$i binutils/cxxfilt &
+        $AFLGO/afl-fuzz -d -k 480 -m none -z exp -c 7h -i in -o out$i binutils/cxxfilt &
     done
 }
 
@@ -108,7 +108,7 @@ myfuzz() {
     elif [ "$2" == "CVE-2016-4491" ]; then # CVE-2016-4491
         echo $'cp-demangle.c:4320' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-4492" ]; then # CVE-2016-4492
-        echo $'cplus-dem.c:3606' >$TMP_DIR/tSrcs.txt
+        echo $'cplus-dem.c:3606\ncplus-dem.c:3781\ncplus-dem.c:2169' >$TMP_DIR/tSrcs.txt
     elif [ "$2" == "CVE-2016-6131" ]; then # CVE-2016-6131
         echo $'cplus-dem.c:3811\ncplus-dem.c:4018\ncplus-dem.c:2543\ncplus-dem.c:2489' >$TMP_DIR/tSrcs.txt
     else
@@ -155,7 +155,7 @@ myfuzz() {
 
     # Run [x] times ...
     for ((i = 1; i <= $1; i++)); do
-        $MYFUZZ/afl-fuzz -k 480 -m none -i in -o out$i binutils/cxxfilt &
+        $MYFUZZ/afl-fuzz -d -k 480 -m none -i in -o out$i binutils/cxxfilt &
     done
 }
 
@@ -166,6 +166,8 @@ myfuzz() {
 
 export SHOWLINENUM=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b/scripts/showlinenum.awk
 export AFL_NO_UI=1
+export AFL_USE_ASAN=1
+export ASAN_OPTIONS="detect_leaks=0 abort_on_error=1 symbolize=0"
 
 if ! [[ "$2" =~ ^[0-9]+$ ]]; then
     echo "$2 is not a number."
