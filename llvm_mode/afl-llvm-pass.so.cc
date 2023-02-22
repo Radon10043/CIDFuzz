@@ -213,7 +213,7 @@ static void fsearchVar(Instruction::op_iterator op, std::string &varName) {
 
     varName = Inst->getName().str();
 
-    if (Inst->getOpcode() == Instruction::PHI) // ?
+    if (Inst->getOpcode() == Instruction::PHI)
       return;
 
     for (auto nop = Inst->op_begin(); nop != Inst->op_end(); nop++)
@@ -310,10 +310,10 @@ bool AFLCoverage::runOnModule(Module &M) {
         if (pos == std::string::npos)
           continue;
 
-        /* 获取bbname与适应度*100后的值, 存入map与set */
+        /* 获取bbname与距离, 存入map与set */
 
         std::string bbname = bbAndDist.substr(0, pos);
-        int mydist         = (int) (atof(bbAndDist.substr(pos + 1).c_str()));
+        int mydist         = (int) (atoi(bbAndDist.substr(pos + 1).c_str()));
         distMap[bbname]    = mydist;
         bbset.insert(bbname);
 
@@ -517,7 +517,7 @@ bool AFLCoverage::runOnModule(Module &M) {
                 duVarMap[dbgLocMap[&I]]["use"].insert(varNames[i]);
               }
 
-              if (n < 2) outs() << "Hm???????????\n";
+              // if (n < 2) outs() << "???????????\n";
 
               if (varNames[n - 1].empty())
                 break;
