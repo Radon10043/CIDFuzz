@@ -2,7 +2,7 @@
 Author: Radon
 Date: 2022-02-05 16:20:42
 LastEditors: Radon
-LastEditTime: 2023-02-01 18:20:30
+LastEditTime: 2023-02-22 15:15:09
 Description: Hi, say something
 '''
 import argparse
@@ -394,8 +394,6 @@ def distanceCalculation(path: str, dotPath: str, tSrcsFile: str):
 
             print("Pre analyzing " + targetLabel + "..., cgDist: ", cgDist, ", len: ", preQueue.qsize())
 
-            # TODO: 目前遇到结构体数组会出错, 因为获取定义-使用关系时是根据指令的op获取变量名
-            # 但LLVM在遇到结构体数组时似乎不会把它当作一个op, 目前还没想到解决办法
             try:
                 targetLabel = getbbPreTainted(targetLabel, preSet)
             except:
@@ -602,12 +600,6 @@ def distanceCalculation(path: str, dotPath: str, tSrcsFile: str):
             f.write(bb + "," + str(dist) + "\n")
 
 
-# TODO: 不记录 cgDist > 64的各块信息
-# 可以把最大限度的cgDist作为一个命令行参数
-
-# TODO: AFLGo有个bug: 同名函数的控制流图只能存一个, 所以可能会导致信息丢失
-# 如果要解决的话, 我认为最简单的解决方案是, CFG的名字改为: cfg.filename.function.dot
-# 但即使这样, 也无法避免同文件中有相同函数名时会造成信息丢失的现象
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-p", "--path", help="存储json, txt等文件的目录", required=True)
