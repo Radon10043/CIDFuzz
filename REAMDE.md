@@ -38,7 +38,7 @@ cd /path/to/CIDFuzz/scripts/fuzz/libming/CVE-2020-6628
 4. For project binutils, we follow experiments settings in original paper of AFLGo and its [fuzzing script](https://github.com/aflgo/aflgo/blob/master/scripts/fuzz/cxxfilt-CVE-2016-4487.sh). The meaning of each parameter of binutils' fuzzing script is as follows:
    * $1: fuzzer
    * $2: repeat times
-   * $3: CVE-ID (Specially, if you set $3 to CVE-2016-4488, script will patch CVE-2016-4487 first)
+   * $3: CVE-ID
 
 ```
 cd /path/to/CIDFuzz/scripts/fuzz/binutils
