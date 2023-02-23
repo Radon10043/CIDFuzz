@@ -2,7 +2,7 @@
 # @Author: Radon
 # @Date: 2023-01-25 17:02:53
 # @LastEditors: Radon
-# @LastEditTime: 2023-02-12 23:03:18
+# @LastEditTime: 2023-02-22 16:59:19
 # @Description: Hi, say something
 ###
 
@@ -28,7 +28,7 @@ afl() {
     echo "" >in/in
     # Run [x] times ...
     for ((i = 1; i <= $1; i++)); do
-        $AFL/afl-fuzz -d -i in -o out$i -m none -k 480 binutils/cxxfilt &
+        timeout 8h $AFL/afl-fuzz -d -i in -o out$i -m none binutils/cxxfilt &
     done
 }
 
@@ -81,16 +81,16 @@ aflgo() {
     mkdir in
     echo "" >in/in
     for ((i = 1; i <= $1; i++)); do
-        $AFLGO/afl-fuzz -d -k 480 -m none -z exp -c 7h -i in -o out$i binutils/cxxfilt &
+        timeout 8h $AFLGO/afl-fuzz -d -m none -z exp -c 7h -i in -o out$i binutils/cxxfilt &
     done
 }
 
 myfuzz() {
-    export MYFUZZ=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b
+    export CIDFUZZ=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b
     export SUBJECT=$PWD
     export TMP_DIR=$PWD/obj-myfuzz-2.52/temp
-    export CC=$MYFUZZ/afl-clang-fast
-    export CXX=$MYFUZZ/afl-clang-fast++
+    export CC=$CIDFUZZ/afl-clang-fast
+    export CXX=$CIDFUZZ/afl-clang-fast++
     export LDFLAGS=-lpthread
     export ADDITIONAL="-fno-discard-value-names -outdir=$TMP_DIR -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps"
     mkdir obj-myfuzz-2.52
@@ -126,12 +126,14 @@ myfuzz() {
     cat $TMP_DIR/BBcalls.txt | sort | uniq >$TMP_DIR/BBcalls2.txt && mv $TMP_DIR/BBcalls2.txt $TMP_DIR/BBcalls.txt
 
     # Format json
+    echo "Formatting json files ..."
     for jsonf in $(ls $TMP_DIR | grep .json); do
         cat $TMP_DIR/${jsonf} | jq --tab . >$TMP_DIR/temp.json
         mv $TMP_DIR/temp.json $TMP_DIR/${jsonf}
     done
 
     # Merge json
+    echo "Merging json files ..."
     cd $TMP_DIR
     names=(bbFunc bbLine duVar funcEntry linebb funcParam callArgs maxLine)
     for name in ${names[@]}; do
@@ -139,15 +141,16 @@ myfuzz() {
     done
 
     # Delete
+    echo "Deleting redudant files ..."
     rm $(ls | grep "[0-9].json")
     cd ..
 
     # Calculate fitness
-    python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
+    python $CIDFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
 
     cd ../
     mkdir obj-cidist && cd obj-cidist
-    CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error -mydist=$TMP_DIR/mydist.cfg.txt" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
+    CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error -cidist=$TMP_DIR/cidist.cfg.txt" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
     make clean all
 
     mkdir in
@@ -155,7 +158,7 @@ myfuzz() {
 
     # Run [x] times ...
     for ((i = 1; i <= $1; i++)); do
-        $MYFUZZ/afl-fuzz -d -k 480 -m none -i in -o out$i binutils/cxxfilt &
+        timeout 8h $CIDFUZZ/afl-fuzz -d -m none -i in -o out$i binutils/cxxfilt &
     done
 }
 

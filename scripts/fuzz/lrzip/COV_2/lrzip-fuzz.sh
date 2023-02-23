@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2022-06-28 10:25:33
- # @LastEditors: Radon
- # @LastEditTime: 2022-11-03 22:20:29
+# @LastEditors: Radon
+# @LastEditTime: 2023-02-22 17:04:31
 # @Description: Hi, say something
 ###
 
@@ -27,14 +27,14 @@ afl() {
     export LDFLAGS=-lpthread
     export ADDITIONAL="-changes=$TMP_DIR/changeBBs.txt"
 
-    echo $'lrzip.c:222\nlrzip.c:223' > $TMP_DIR/changeBBs.txt
+    echo $'lrzip.c:222\nlrzip.c:223' >$TMP_DIR/changeBBs.txt
 
     ./autogen.sh
     make distclean
 
     cd obj-afl
 
-    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=`pwd`
+    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=$(pwd)
     make clean all
     mkdir in
     cp $AFL/testcases/archives/exotic/rzip/small_archive.rz in/
@@ -45,8 +45,8 @@ afl() {
             echo "Secondary still running? sleep 1 minute ..."
             sleep 1m
         done
-        gnome-terminal -t "secondary" -- bash -c "$AFL/afl-fuzz -S secondary -m none -k 120 -i in -o out$i ./lrzip -t @@"
-        $AFL/afl-fuzz -M main -m none  -k 120 -i in -o out$i ./lrzip -t @@
+        gnome-terminal -t "secondary" -- bash -c "timeout 2h $AFL/afl-fuzz -S secondary -m none -i in -o out$i ./lrzip -t @@"
+        timeout 2h $AFL/afl-fuzz -M main -m none -i in -o out$i ./lrzip -t @@
     done
 }
 
@@ -62,7 +62,7 @@ aflgo() {
     export LDFLAGS=-lpthread
     export ADDITIONAL="-targets=$TMP_DIR/BBtargets.txt -outdir=$TMP_DIR -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps"
 
-    echo $'lrzip.c:222\nlrzip.c:223' > $TMP_DIR/changeBBs.txt
+    echo $'lrzip.c:222\nlrzip.c:223' >$TMP_DIR/changeBBs.txt
 
     ./autogen.sh
     make distclean
@@ -71,9 +71,9 @@ aflgo() {
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
     # cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/BBtargets.txt
-    echo $'lrzip.c:222\nlrzip.c:223' > $TMP_DIR/BBtargets.txt
+    echo $'lrzip.c:222\nlrzip.c:223' >$TMP_DIR/BBtargets.txt
 
-    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=`pwd`
+    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=$(pwd)
     make clean all
 
     cat $TMP_DIR/BBnames.txt | rev | cut -d: -f2- | rev | sort | uniq >$TMP_DIR/BBnames2.txt && mv $TMP_DIR/BBnames2.txt $TMP_DIR/BBnames.txt
@@ -82,7 +82,7 @@ aflgo() {
     $AFLGO/scripts/genDistance.sh $SUBJECT $TMP_DIR lrzip
 
     export ADDITIONAL="-distance=$TMP_DIR/distance.cfg.txt -changes=$TMP_DIR/changeBBs.txt"
-    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=`pwd`
+    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=$(pwd)
     make clean all
 
     mkdir in
@@ -94,8 +94,8 @@ aflgo() {
             echo "Secondary still running? sleep 1 minute ..."
             sleep 1m
         done
-        gnome-terminal -t "secondary" -- bash -c "$AFLGO/afl-fuzz -S secondary -m none -k 120 -z exp -c 45m -i in -o out$i ./lrzip -t @@"
-        $AFLGO/afl-fuzz -M main -m none -k 120 -z exp -c 45m -i in -o out$i ./lrzip -t @@
+        gnome-terminal -t "secondary" -- bash -c "timeout 2h $AFLGO/afl-fuzz -S secondary -m none -z exp -c 45m -i in -o out$i ./lrzip -t @@"
+        timeout 2h $AFLGO/afl-fuzz -M main -m none -z exp -c 45m -i in -o out$i ./lrzip -t @@
     done
 }
 
@@ -103,11 +103,11 @@ myfuzz() {
     mkdir obj-myfuzz-2.52
     mkdir obj-myfuzz-2.52/temp
 
-    export MYFUZZ=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b
+    export CIDFUZZ=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b
     export SUBJECT=$PWD
     export TMP_DIR=$PWD/obj-myfuzz-2.52/temp
-    export CC=$MYFUZZ/afl-clang-fast
-    export CXX=$MYFUZZ/afl-clang-fast++
+    export CC=$CIDFUZZ/afl-clang-fast
+    export CXX=$CIDFUZZ/afl-clang-fast++
     export LDFLAGS=-lpthread
     export ADDITIONAL="-outdir=$TMP_DIR -fno-discard-value-names"
 
@@ -116,19 +116,21 @@ myfuzz() {
 
     cd obj-myfuzz-2.52
 
-    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=`pwd`
+    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=$(pwd)
     make clean all
 
     cat $TMP_DIR/BBnames.txt | rev | cut -d: -f2- | rev | sort | uniq >$TMP_DIR/BBnames2.txt && mv $TMP_DIR/BBnames2.txt $TMP_DIR/BBnames.txt
     cat $TMP_DIR/BBcalls.txt | sort | uniq >$TMP_DIR/BBcalls2.txt && mv $TMP_DIR/BBcalls2.txt $TMP_DIR/BBcalls.txt
 
     # Format json
+    echo "Formatting json files ..."
     for jsonf in $(ls $TMP_DIR | grep .json); do
         cat $TMP_DIR/${jsonf} | jq --tab . >$TMP_DIR/temp.json
         mv $TMP_DIR/temp.json $TMP_DIR/${jsonf}
     done
 
     # Merge json
+    echo "Merging json files ..."
     cd $TMP_DIR
     names=(bbFunc bbLine duVar funcEntry linebb funcParam callArgs maxLine)
     for name in ${names[@]}; do
@@ -136,23 +138,24 @@ myfuzz() {
     done
 
     # Delete
+    echo "Deleting redudant files ..."
     rm $(ls | grep "[0-9].json")
     cd ..
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
     cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
 
-    python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
+    python $CIDFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
 
-    # python $MYFUZZ/scripts/pyscripts/getChangeBBs.py $TMP_DIR
-    echo $'lrzip.c:222\nlrzip.c:223' > $TMP_DIR/changeBBs.txt
+    # python $CIDFUZZ/scripts/pyscripts/getChangeBBs.py $TMP_DIR
+    echo $'lrzip.c:222\nlrzip.c:223' >$TMP_DIR/changeBBs.txt
 
-    export ADDITIONAL="-mydist=$TMP_DIR/mydist.cfg.txt -changes=$TMP_DIR/changeBBs.txt"
-    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=`pwd`
+    export ADDITIONAL="-cidist=$TMP_DIR/cidist.cfg.txt -changes=$TMP_DIR/changeBBs.txt"
+    CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --prefix=$(pwd)
     make clean all
 
     mkdir in
-    cp $MYFUZZ/testcases/archives/exotic/rzip/small_archive.rz in/
+    cp $CIDFUZZ/testcases/archives/exotic/rzip/small_archive.rz in/
     # echo "" > in/in
 
     # Run [x] times
@@ -161,8 +164,8 @@ myfuzz() {
             echo "Secondary still running? sleep 1 minute ..."
             sleep 1m
         done
-        gnome-terminal -t "secondary" -- bash -c "$MYFUZZ/afl-fuzz -S secondary -m none -k 120 -i in -o out$i ./lrzip -t @@"
-        $MYFUZZ/afl-fuzz -M main -m none  -k 120 -i in -o out$i ./lrzip -t @@
+        gnome-terminal -t "secondary" -- bash -c "timeout 2h $CIDFUZZ/afl-fuzz -S secondary -m none -i in -o out$i ./lrzip -t @@"
+        timeout 2h $CIDFUZZ/afl-fuzz -M main -m none -i in -o out$i ./lrzip -t @@
     done
 }
 

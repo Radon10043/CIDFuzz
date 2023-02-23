@@ -81,9 +81,9 @@ std::map<std::string, std::string> bbFuncMap;                                   
 std::map<std::string, std::string> linebbMap;                                                                // <行, 其所在bb>
 std::map<std::string, int> maxLineMap;                                                                       // <filename, 文件行数>
 
-cl::opt<std::string> MyDistFile(
-    "mydist",
-    cl::desc("MyDist file containing the mydist of each basic block to the provided targets."),
+cl::opt<std::string> CIDistFile(
+    "cidist",
+    cl::desc("CIDist file containing the cidist of each basic block to the provided targets."),
     cl::value_desc("filename")
 );
 
@@ -282,10 +282,10 @@ bool AFLCoverage::runOnModule(Module &M) {
   std::unordered_map<std::string, u64> distMap;
   std::unordered_set<std::string> bbset;
 
-  /* 不能同时指定 -mydist 与 -outdir */
+  /* 不能同时指定 -cidist 与 -outdir */
 
-  if (!MyDistFile.empty() && !OutDirectory.empty()) {
-    FATAL("Cannot specify both '-mydist' and '-outdir'!");
+  if (!CIDistFile.empty() && !OutDirectory.empty()) {
+    FATAL("Cannot specify both '-cidist' and '-outdir'!");
     return false;
   }
 
@@ -295,9 +295,9 @@ bool AFLCoverage::runOnModule(Module &M) {
 
     is_preprocessing = true;
 
-  } else if (!MyDistFile.empty()) {
+  } else if (!CIDistFile.empty()) {
 
-    std::ifstream fin(MyDistFile);
+    std::ifstream fin(CIDistFile);
     std::string bbAndDist;
 
     if (fin.is_open()) {
@@ -313,8 +313,8 @@ bool AFLCoverage::runOnModule(Module &M) {
         /* 获取bbname与距离, 存入map与set */
 
         std::string bbname = bbAndDist.substr(0, pos);
-        int mydist         = (int) (atoi(bbAndDist.substr(pos + 1).c_str()));
-        distMap[bbname]    = mydist;
+        int cidist         = (int) (atoi(bbAndDist.substr(pos + 1).c_str()));
+        distMap[bbname]    = cidist;
         bbset.insert(bbname);
 
       }
@@ -323,7 +323,7 @@ bool AFLCoverage::runOnModule(Module &M) {
 
     } else {
 
-      FATAL("Hmmm, I can't find mydist file.");
+      FATAL("Hmmm, I can't find cidist file.");
       return false;
 
     }
@@ -366,7 +366,7 @@ bool AFLCoverage::runOnModule(Module &M) {
   if (isatty(2) && !getenv("AFL_QUIET")) {
 
     SAYF(cCYA "afl-llvm-pass " cBRI VERSION cRST " modified by Radon (%s mode)\n",
-        (is_preprocessing ? "preprocessing" : "mydist instrumentation"));
+        (is_preprocessing ? "preprocessing" : "cidist instrumentation"));
 
   } else be_quiet = 1;
 
@@ -789,7 +789,7 @@ bool AFLCoverage::runOnModule(Module &M) {
 
   } else {
 
-    /* MyDist instrumentation mode */
+    /* CIDist instrumentation mode */
 
     LLVMContext &C = M.getContext();
 
@@ -823,7 +823,7 @@ bool AFLCoverage::runOnModule(Module &M) {
     for (auto &F : M)
       for (auto &BB : F) {
 
-        s64 mydist = -1;
+        s64 cidist = -1;
         std::string bbname;
 
         for (auto &I : BB) {
@@ -846,7 +846,7 @@ bool AFLCoverage::runOnModule(Module &M) {
           for (auto&& psi : distMap) {
 
             if (bbname.compare(psi.first) == 0)
-              mydist = psi.second;
+              cidist = psi.second;
 
           }
 
@@ -890,19 +890,19 @@ bool AFLCoverage::runOnModule(Module &M) {
             IRB.CreateStore(ConstantInt::get(Int32Ty, cur_loc >> 1), AFLPrevLoc);
         Store->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 
-        if (mydist >= 0) {
+        if (cidist >= 0) {
 
-          ConstantInt *MyDist =
-              ConstantInt::get(LargestType, ((u64)1 << mydist));
+          ConstantInt *CIDist =
+              ConstantInt::get(LargestType, ((u64)1 << cidist));
 
-          /* Add mydist to shm[MAPSIZE] */
+          /* Add cidist to shm[MAPSIZE] */
 
           Value *MapDistPtr = IRB.CreateBitCast(
               IRB.CreateGEP(MapPtr, MapDistLoc), LargestType->getPointerTo());
           LoadInst *MapDist = IRB.CreateLoad(MapDistPtr);
           MapDist->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 
-          Value *IncrDist = IRB.CreateOr(MapDist, MyDist);
+          Value *IncrDist = IRB.CreateOr(MapDist, CIDist);
           IRB.CreateStore(IncrDist, MapDistPtr)
               ->setMetadata(M.getMDKindID("nosanitize"), MDNode::get(C, None));
 

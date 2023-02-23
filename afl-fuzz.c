@@ -280,8 +280,10 @@ static double max_fitness = -1.0;     /* Radon: Max fitness of queue      */
 static double min_fitness = 100.0;    /* Radon: Min fitness of queue      */
                                       /* Fitness range: 0 - 1             */
 
+#ifdef DEBUG
 static u32 stop_time   = 2880;        /* Radon: Fuzzing time (minutes)    */
                                       /* Default: 2 days                  */
+#endif
 
 #ifdef CHECK_COV
 static u8 total_chg_cov[32]   = {0};  /* Radon: 记录每个变更的BB是否被覆盖    */
@@ -976,8 +978,10 @@ static inline u8 has_new_bits(u8* virgin_map) {
     chg_cov_tend[now] = change_cov_num;
 #endif
 
+#ifdef DEBUG
   if (get_cur_time() - start_time > stop_time * 60000)
     stop_soon = 2;
+#endif
 
 #else
 
@@ -4109,7 +4113,7 @@ static void show_stats(void) {
 
   sprintf(tmp + banner_pad, "%s " cLCY VERSION cLGN
           " (%s)",  crash_mode ? cPIN "peruvian were-rabbit" : 
-          cYEL "american fuzzy lop (myfuzz)", use_banner);
+          cYEL "american fuzzy lop (CIDFuzz)", use_banner);
 
   SAYF("\n%s\n\n", tmp);
 
@@ -4853,12 +4857,12 @@ static u32 calculate_score(struct queue_entry* q) {
 
   }
 
-  /* Radon: MYFUZZ-Strategy */
+  /* Radon: CIDFUZZ-Strategy */
 
   double k = 0.5;
   perf_score = k * perf_score + (1.0 - k) * q->fitness * perf_score;;
 
-  /* MYFUZZ-AFL2.52B-Debugging */
+  /* CIDFuzz-Debugging */
 
 #ifdef DEBUG
 
@@ -8020,12 +8024,14 @@ int main(int argc, char** argv) {
 
         break;
 
+#ifdef DEBUG
       case 'k': /* Fuzzing time (minutes). Default: 2880 minutes (2 days) */
 
         if (sscanf(optarg, "%u", &stop_time) < 1)
           FATAL("Bad syntax used for -k");
 
         break;
+#endif
 
       default:
 

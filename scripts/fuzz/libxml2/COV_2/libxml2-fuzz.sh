@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2022-06-28 09:55:58
- # @LastEditors: Radon
- # @LastEditTime: 2022-11-03 22:19:59
+# @LastEditors: Radon
+# @LastEditTime: 2023-02-22 17:04:00
 # @Description: Hi, say something
 ###
 
@@ -45,8 +45,8 @@ afl() {
             echo "Secondary still running? sleep 1 minute ..."
             sleep 1m
         done
-        gnome-terminal -t "secondary" -- bash -c "$AFL/afl-fuzz -S secondary -m none -k 120 -i in -o out$i ./xmllint --valid @@" &
-        $AFL/afl-fuzz -M main -m none -k 120 -i in -o out$i ./xmllint --valid @@
+        gnome-terminal -t "secondary" -- bash -c "timeout 2h $AFL/afl-fuzz -S secondary -m none -i in -o out$i ./xmllint --valid @@" &
+        timeout 2h $AFL/afl-fuzz -M main -m none -i in -o out$i ./xmllint --valid @@
     done
 }
 
@@ -92,8 +92,8 @@ aflgo() {
             echo "Secondary still running? sleep 1 minute ..."
             sleep 1m
         done
-        gnome-terminal -t "secondary" -- bash -c "$AFLGO/afl-fuzz -S secondary -z exp -c 45m -m none -k 120 -i in -o out$i ./xmllint --valid @@"
-        $AFLGO/afl-fuzz -M main -z exp -c 45m -m none -k 120 -i in -o out$i ./xmllint --valid @@
+        gnome-terminal -t "secondary" -- bash -c "timeout 2h $AFLGO/afl-fuzz -S secondary -z exp -c 45m -m none -i in -o out$i ./xmllint --valid @@"
+        timeout 2h $AFLGO/afl-fuzz -M main -z exp -c 45m -m none -i in -o out$i ./xmllint --valid @@
     done
 }
 
@@ -101,11 +101,11 @@ myfuzz() {
     mkdir obj-myfuzz-2.52
     mkdir obj-myfuzz-2.52/temp
 
-    export MYFUZZ=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b
+    export CIDFUZZ=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b
     export SUBJECT=$PWD
     export TMP_DIR=$PWD/obj-myfuzz-2.52/temp
-    export CC=$MYFUZZ/afl-clang-fast
-    export CXX=$MYFUZZ/afl-clang-fast++
+    export CC=$CIDFUZZ/afl-clang-fast
+    export CXX=$CIDFUZZ/afl-clang-fast++
     export LDFLAGS=-lpthread
     export ADDITIONAL="-outdir=$TMP_DIR -fno-discard-value-names"
 
@@ -121,12 +121,14 @@ myfuzz() {
     cat $TMP_DIR/BBcalls.txt | sort | uniq >$TMP_DIR/BBcalls2.txt && mv $TMP_DIR/BBcalls2.txt $TMP_DIR/BBcalls.txt
 
     # Format json
+    echo "Formatting json files ..."
     for jsonf in $(ls $TMP_DIR | grep .json); do
         cat $TMP_DIR/${jsonf} | jq --tab . >$TMP_DIR/temp.json
         mv $TMP_DIR/temp.json $TMP_DIR/${jsonf}
     done
 
     # Merge json
+    echo "Merging json files ..."
     cd $TMP_DIR
     names=(bbFunc bbLine duVar funcEntry linebb funcParam callArgs maxLine)
     for name in ${names[@]}; do
@@ -134,22 +136,23 @@ myfuzz() {
     done
 
     # Delete
+    echo "Deleting redudant files ..."
     rm $(ls | grep "[0-9].json")
     cd ..
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
     cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
 
-    # echo "" > $TMP_DIR/mydist.cfg.txt
-    python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
-    python $MYFUZZ/scripts/pyscripts/getChangeBBs.py $TMP_DIR
+    # echo "" > $TMP_DIR/cidist.cfg.txt
+    python $CIDFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
+    python $CIDFUZZ/scripts/pyscripts/getChangeBBs.py $TMP_DIR
 
-    export ADDITIONAL="-mydist=$TMP_DIR/mydist.cfg.txt -changes=$TMP_DIR/changeBBs.txt"
+    export ADDITIONAL="-cidist=$TMP_DIR/cidist.cfg.txt -changes=$TMP_DIR/changeBBs.txt"
     CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" ../configure --disable-shared --prefix=$(pwd)
     make clean all
 
     mkdir in
-    cp $MYFUZZ/testcases/others/xml/small_document.xml in/
+    cp $CIDFUZZ/testcases/others/xml/small_document.xml in/
 
     # Run [x] times
     for ((i = 1; i <= $1; i++)); do
@@ -157,8 +160,8 @@ myfuzz() {
             echo "Secondary still running? sleep 1 minute ..."
             sleep 1m
         done
-        gnome-terminal -t "secondary" -- bash -c "$MYFUZZ/afl-fuzz -S secondary -m none -k 120 -i in -o out$i ./xmllint --valid @@"
-        $MYFUZZ/afl-fuzz -M main -m none -k 120 -i in -o out$i ./xmllint --valid @@
+        gnome-terminal -t "secondary" -- bash -c "timeout 2h $CIDFUZZ/afl-fuzz -S secondary -m none -i in -o out$i ./xmllint --valid @@"
+        timeout 2h $CIDFUZZ/afl-fuzz -M main -m none -i in -o out$i ./xmllint --valid @@
     done
 }
 

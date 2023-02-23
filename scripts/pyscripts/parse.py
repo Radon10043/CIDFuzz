@@ -2,7 +2,7 @@
 Author: Radon
 Date: 2022-02-05 16:20:42
 LastEditors: Radon
-LastEditTime: 2023-02-22 15:15:09
+LastEditTime: 2023-02-22 15:38:07
 Description: Hi, say something
 '''
 import argparse
@@ -595,7 +595,7 @@ def distanceCalculation(path: str, dotPath: str, tSrcsFile: str):
         dists = [dist for dist in dists if dist != -1]
         resDict[bb] = min(dists)
 
-    with open(path + "/mydist.cfg.txt", mode="w") as f:
+    with open(os.path.join(path, "cidist.cfg.txt"), mode="w") as f:
         for bb, dist in resDict.items():
             f.write(bb + "," + str(dist) + "\n")
 

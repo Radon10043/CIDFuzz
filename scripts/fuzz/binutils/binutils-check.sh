@@ -14,7 +14,7 @@ asan() {
         for f in $(ls | grep id); do
             echo -n 'Analyzing out'$i' ... '$cnt$'\r'
             echo -e "\n${f}" | cut -d ',' -f 1-3 >>0.asan.txt
-            cat $f | /home/radon/Documents/fuzzing/CIProjs/binutils/ASAN/obj-asan/binutils/cxxfilt 2>&1 | egrep '(SUMMARY|#[0-9]|Hint)' | tee -a 0.asan.txt >/dev/null
+            cat $f | /path/to/binutils/ASAN/obj-asan/binutils/cxxfilt 2>&1 | egrep '(SUMMARY|#[0-9]|Hint)' | tee -a 0.asan.txt >/dev/null
             ((cnt++))
         done
         echo
@@ -29,7 +29,7 @@ patch() {
         cnt=0
         for f in $(ls | grep id); do
             echo -e "\n${f}" | cut -d ',' -f 1-3 >>0.patch.$1.txt
-            cat $f | /home/radon/Documents/fuzzing/CIProjs/binutils/PATCH-2016-$1/obj-build/binutils/cxxfilt >/dev/null 2>&1
+            cat $f | /path/to/binutils/PATCH-2016-$1/obj-build/binutils/cxxfilt >/dev/null 2>&1
             extnum=$?
 
             echo $extnum >>0.patch.$1.txt

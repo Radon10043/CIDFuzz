@@ -1,8 +1,8 @@
 ###
 # @Author: Radon
 # @Date: 2022-06-17 12:17:21
- # @LastEditors: Radon
- # @LastEditTime: 2022-11-03 22:17:27
+# @LastEditors: Radon
+# @LastEditTime: 2023-02-22 16:59:50
 # @Description: Hi, say something
 ###
 
@@ -42,8 +42,8 @@ afl() {
             echo "Secondary still running? sleep 1 minute ..."
             sleep 1m
         done
-        gnome-terminal -t "secondary" -- bash -c "$AFL/afl-fuzz -S secondary -m none -k 120 -i in -o out$i src/app/jasper --output /tmp/out_s.jpg --input @@" &
-        $AFL/afl-fuzz -M main -m none -k 120 -i in -o out$i src/app/jasper --output /tmp/out_m.jpg --input @@
+        gnome-terminal -t "secondary" -- bash -c "timeout 2h $AFL/afl-fuzz -S secondary -m none -i in -o out$i src/app/jasper --output /tmp/out_s.jpg --input @@" &
+        timeout 2h $AFL/afl-fuzz -M main -m none -i in -o out$i src/app/jasper --output /tmp/out_m.jpg --input @@
     done
 }
 
@@ -95,8 +95,8 @@ aflgo() {
             echo "Secondary still running? sleep 1 minute ..."
             sleep 1m
         done
-        gnome-terminal -t "secondary" -- bash -c "$AFLGO/afl-fuzz -S secondary -m none -z exp -c 45m -k 120 -i in -o out$i src/app/jasper --output /tmp/out_m.jpg --input @@" &
-        $AFLGO/afl-fuzz -M main -m none -z exp -c 45m -k 120 -i in -o out$i src/app/jasper --output /tmp/out_m.jpg --input @@
+        gnome-terminal -t "secondary" -- bash -c "timeout 2h $AFLGO/afl-fuzz -S secondary -m none -z exp -c 45m -i in -o out$i src/app/jasper --output /tmp/out_m.jpg --input @@" &
+        $timeout 2h AFLGO/afl-fuzz -M main -m none -z exp -c 45m -i in -o out$i src/app/jasper --output /tmp/out_m.jpg --input @@
     done
 }
 
@@ -104,11 +104,11 @@ myfuzz() {
     mkdir obj-myfuzz-2.52
     mkdir obj-myfuzz-2.52/temp
 
-    export MYFUZZ=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b
+    export CIDFUZZ=/home/radon/Documents/fuzzing/fuzzers/myfuzz-afl2.52b
     export SUBJECT=$PWD
     export TMP_DIR=$PWD/obj-myfuzz-2.52/temp
-    export CC=$MYFUZZ/afl-clang-fast
-    export CXX=$MYFUZZ/afl-clang-fast++
+    export CC=$CIDFUZZ/afl-clang-fast
+    export CXX=$CIDFUZZ/afl-clang-fast++
     export LDFLAGS=-lpthread
     export ADDITIONAL="-outdir=$TMP_DIR -fno-discard-value-names -flto -fuse-ld=gold -Wl,-plugin-opt=save-temps"
 
@@ -120,12 +120,14 @@ myfuzz() {
     cat $TMP_DIR/BBcalls.txt | sort | uniq >$TMP_DIR/BBcalls2.txt && mv $TMP_DIR/BBcalls2.txt $TMP_DIR/BBcalls.txt
 
     # Format json
+    echo "Formatting json files ..."
     for jsonf in $(ls $TMP_DIR | grep .json); do
         cat $TMP_DIR/${jsonf} | jq --tab . >$TMP_DIR/temp.json
         mv $TMP_DIR/temp.json $TMP_DIR/${jsonf}
     done
 
     # Merge json
+    echo "Merging json files ..."
     cd $TMP_DIR
     names=(bbFunc bbLine duVar funcEntry linebb funcParam callArgs maxLine)
     for name in ${names[@]}; do
@@ -133,16 +135,17 @@ myfuzz() {
     done
 
     # Delete
+    echo "Deleting redudant files ..."
     rm $(ls | grep "[0-9].json")
     cd ..
 
     git diff -U0 HEAD^ HEAD >$TMP_DIR/commit.diff
     cat $TMP_DIR/commit.diff | $SHOWLINENUM show_header=0 path=1 | grep -e "\.[ch]:[0-9]*:+" -e "\.cpp:[0-9]*:+" -e "\.cc:[0-9]*:+" | cut -d+ -f1 | rev | cut -c2- | cut -d/ -f1 | rev >$TMP_DIR/tSrcs.txt
 
-    python $MYFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
+    python $CIDFUZZ/scripts/pyscripts/parse.py -p $TMP_DIR -d $TMP_DIR/dot-files -t $TMP_DIR/tSrcs.txt
 
     # echo $'' >$TMP_DIR/changeBBs.txt
-    python $MYFUZZ/scripts/pyscripts/getChangeBBs.py $TMP_DIR
+    python $CIDFUZZ/scripts/pyscripts/getChangeBBs.py $TMP_DIR
 
     cd $SUBJECT
     mkdir obj-myfuzz-2.522
@@ -150,21 +153,21 @@ myfuzz() {
     rm -rf obj-myfuzz-2.52
     mv obj-myfuzz-2.522 obj-myfuzz-2.52
     cd obj-myfuzz-2.52
-    export ADDITIONAL="-mydist=$TMP_DIR/mydist.cfg.txt -changes=$TMP_DIR/changeBBs.txt"
+    export ADDITIONAL="-cidist=$TMP_DIR/cidist.cfg.txt -changes=$TMP_DIR/changeBBs.txt"
     CFLAGS="$ADDITIONAL" CXXFLAGS="$ADDITIONAL" cmake ..
     make clean all
 
     mkdir in
-    cp $MYFUZZ/testcases/images/bmp/not_kitty.bmp in
-    cp $MYFUZZ/testcases/images/jp2/not_kitty.jp2 in
+    cp $CIDFUZZ/testcases/images/bmp/not_kitty.bmp in
+    cp $CIDFUZZ/testcases/images/jp2/not_kitty.jp2 in
 
     for ((i = 1; i <= $1; i++)); do
         while [ $(ps -ax | grep myfuzz | wc -l) -gt 1 ]; do
             echo "Secondary still running? sleep 1 minute ..."
             sleep 1m
         done
-        gnome-terminal -t "secondary" -- bash -c "$MYFUZZ/afl-fuzz -S secondary -m none -k 120 -i in -o out$i src/app/jasper --output /tmp/out_s.jpg --input @@" &
-        $MYFUZZ/afl-fuzz -M main -m none -k 120 -i in -o out$i src/app/jasper --output /tmp/out_m.jpg --input @@
+        gnome-terminal -t "secondary" -- bash -c "timeout 2h $CIDFUZZ/afl-fuzz -S secondary -m none -i in -o out$i src/app/jasper --output /tmp/out_s.jpg --input @@" &
+        timeout 2h $CIDFUZZ/afl-fuzz -M main -m none -i in -o out$i src/app/jasper --output /tmp/out_m.jpg --input @@
     done
 }
 

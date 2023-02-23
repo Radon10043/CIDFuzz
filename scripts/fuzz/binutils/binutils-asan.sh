@@ -33,6 +33,6 @@ mkdir obj-asan && cd obj-asan
 CFLAGS="-fsanitize=address -U_FORTIFY_SOURCE -DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
 make clean all
 
-# for f in `ls | grep id`; do echo -e "\n${f}" | cut -d ',' -f 1-3 >> 0.txt; cat $f | /home/radon/Documents/fuzzing/CIProjs/binutils/ASAN/obj-asan/binutils/cxxfilt 2>&1 | egrep 'SUMMARY|#[0-9] ' | tee -a 0.txt; done
+# for f in `ls | grep id`; do echo -e "\n${f}" | cut -d ',' -f 1-3 >> 0.txt; cat $f | /path/to/binutils/ASAN/obj-asan/binutils/cxxfilt 2>&1 | egrep 'SUMMARY|#[0-9] ' | tee -a 0.txt; done
 
 # CFLAGS="-DFORTIFY_SOURCE=2 -fstack-protector-all -fno-omit-frame-pointer -g -Wno-error" LDFLAGS="-ldl -lutil" ../configure --disable-shared --disable-gdb --disable-libdecnumber --disable-readline --disable-sim --disable-ld
